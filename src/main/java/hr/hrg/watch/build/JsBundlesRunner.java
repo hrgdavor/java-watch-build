@@ -58,7 +58,7 @@ public class JsBundlesRunner implements Runnable{
 		watcher.includes(config.include);
 		watcher.excludes(config.exclude);
 		
-		// when folder watcher is started, all matchers that were added to it are 
+		// when input watcher is started, all matchers that were added to it are 
 		// filled with files found that are (included + not excluded)
 		watcher.init(watch);
 		

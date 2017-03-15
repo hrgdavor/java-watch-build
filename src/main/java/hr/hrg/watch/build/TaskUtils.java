@@ -83,7 +83,7 @@ public class TaskUtils {
 		}
 	}
 
-	/** Resolve current folder. If the passed file is folder use that, else use parent folder of the file.*/
+	/** Resolve current input. If the passed file is input use that, else use parent input of the file.*/
 	public static File getFolder(File file) {
 		if(file.isDirectory()) return file;
 		return file.getParentFile();

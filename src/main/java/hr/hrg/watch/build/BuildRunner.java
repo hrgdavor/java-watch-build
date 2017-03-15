@@ -110,7 +110,7 @@ public class BuildRunner{
 			List<Thread> threads = new ArrayList<>();
 			int count = steps.size();
 			
-			LangRunner langRunner = null;
+			HashMap<String, LangTask> langTaskMap = new HashMap<>();  
 			for(int i=0; i<count; i++){
 				JsonNode step = steps.get(i);
 				StepConfig stepConfig = buildStepConfig(step);
@@ -125,7 +125,7 @@ public class BuildRunner{
 					
 					for (CopyConfig.Item item : copyStep.sets){
 						if(isNoOutput(item.output)){
-							log.info("Skipping copy step "+item.folder+" because of disabled output");
+							log.info("Skipping copy step "+item.input+" because of disabled output");
 							continue;
 						}
 						CopyRunner copyRunner = new CopyRunner(item, outputRoot);
@@ -133,9 +133,25 @@ public class BuildRunner{
 						copyRunner.start(watch);
 					
 						if(watch)
-							threads.add(new Thread(copyRunner,"Copy:"+item.folder+"-to-"+item.output));
+							threads.add(new Thread(copyRunner,"Copy:"+item.input+"-to-"+item.output));
 					}
 					
+				}else if(stepConfig instanceof GzipConfig){
+					GzipConfig gzipStep = (GzipConfig) stepConfig;
+					
+					for (GzipConfig.Item item : gzipStep.sets){
+						if(item.output == null) item.output = item.input;
+						if(isNoOutput(item.output)){
+							log.info("Skipping copy step "+item.input+" because of disabled output");
+							continue;
+						}
+						GzipRunner gzipRunner = new GzipRunner(item, outputRoot);
+						
+						gzipRunner.start(watch);
+					
+						if(watch)
+							threads.add(new Thread(gzipRunner,"Gzip:"+item.input+"-to-"+item.output));
+					}
 				}else if(stepConfig instanceof HtmlScriptAndCssConfig){
 					HtmlScriptAndCssConfig htmlStep = (HtmlScriptAndCssConfig) stepConfig;
 					
@@ -160,8 +176,8 @@ public class BuildRunner{
 					}
 
 					
-					langRunner = new LangRunner(langStep, outputRoot, yamlMapper, objectMapper);
-					
+					LangRunner langRunner = new LangRunner(langStep, outputRoot, yamlMapper, objectMapper);
+					langTaskMap.put(langStep.input, langRunner.getTask());
 					langRunner.start(watch);
 
 					if(watch)
@@ -169,13 +185,13 @@ public class BuildRunner{
 
 				}else if(stepConfig instanceof CompConfig){
 					CompConfig compStep = (CompConfig) stepConfig;
-					
-					if(langRunner == null){
-						throw new RuntimeException("You must run a Language task before JsComp");
+					LangTask langTask = langTaskMap.get(compStep.lang);
+					if(langTask == null){
+						throw new RuntimeException("You must run a Language task that reads "+compStep.lang+" before JsComp that uses that language file");
 					}
 					
 					for (CompConfig.Item item : compStep.sets){
-						CompRunner compRunner = new CompRunner(item, outputRoot,langRunner.getTask());
+						CompRunner compRunner = new CompRunner(item, outputRoot,langTask);
 						if(isNoOutput(item.output)){
 							log.info("Skipping JsComp step "+item.input+" because of disabled output");
 							continue;
@@ -289,6 +305,8 @@ public class BuildRunner{
 			return  yamlMapper.convertValue(step, JsBundlesConfig.class);			
 		}else if(type == "JsComp"){
 			return yamlMapper.convertValue(step, CompConfig.class);
+		}else if(type == "Gzip"){
+			return yamlMapper.convertValue(step, GzipConfig.class);
 		}else if(type == "HtmlScriptAndCss"){
 			return yamlMapper.convertValue(step, HtmlScriptAndCssConfig.class);
 		}else if(type == "Sass"){

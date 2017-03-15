@@ -10,13 +10,13 @@ class CopyRunner implements Runnable{
 
 	public CopyRunner(CopyConfig.Item config, File outputRoot){
 
-		File f = new File(config.folder);
+		File f = new File(config.input);
 		int i=0;
 		while(!f.exists() && i<config.altFolder.size()){
 			f = new File(config.altFolder.get(i));
 			i++;
 		}
-		if(!f.exists()) throw new RuntimeException("Folder and alternatives do not exist "+config.folder+" "+f.getAbsolutePath());
+		if(!f.exists()) throw new RuntimeException("Folder and alternatives do not exist "+config.input+" "+f.getAbsolutePath());
 		
 		GlobWatcher watcher = new GlobWatcher(f.getAbsoluteFile().toPath());
 		
