@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,16 +37,21 @@ public class BuildRunner{
 	}
 
 	public static void main(String[] args) {
-		boolean watch  = args.length >1 && "watch".equals(args[1]);
-		new BuildRunner(new YAMLMapper(), new ObjectMapper()).run(args[0], watch, null);
+		boolean watch  = false;
+		boolean dryRun = false;
+		for(int i=1; i<args.length; i++) {
+			if("--watch".equals(args[i])) watch = true;
+			else if("--dry-run".equals(args[i])) dryRun = true;
+		}
+		new BuildRunner(new YAMLMapper(), new ObjectMapper()).run(args[0], watch, dryRun , null);
 	}
 	
-	public void run(String confFilePath, boolean watch, Map<String, String> overrides) {
+	public void run(String confFilePath, boolean watch, boolean dryRun, Map<String, String> overrides) {
 		try {
 			VarMap vars = new VarMap();
 			List<JsonNode> steps = new ArrayList<>();
 			File confFile = new File(confFilePath);
-			HashMap<File, File> included = new HashMap<>();
+			HashMap<File, File> included = new LinkedHashMap<>();
 			
 			loadFile(included,steps,vars, confFile, new File("./"));
 			
@@ -56,11 +62,47 @@ public class BuildRunner{
 					vars.put(entry.getKey(), entry.getValue());
 				}
 			}
-			
-			for(JsonNode step: steps){
-				expandVars(step, vars);				
-			}
 
+			// multiply steps that are per language
+			List<JsonNode> tmpSteps = new ArrayList<>();
+			String lang = vars.get("lang");
+			String languagesStr = vars.get("langs");
+			String[] langs = new String[]{lang};
+			if(languagesStr != null) {
+				langs = languagesStr.split(",");
+			}
+			if(lang == null) {
+				lang = langs[0];
+			}
+			// TODO read languages var
+			for(JsonNode step: steps){
+				if(langs.length >1 && step.get("perLanguage") != null && step.get("perLanguage").booleanValue()){
+					for(String tmpLang:langs) {
+						log.debug("Multiply step "+step.get("type").textValue()+" for lang:"+tmpLang);
+						vars.put("lang", tmpLang);
+						tmpSteps.add(expandVars(copy(objectMapper,step), vars));
+					}
+					// restore default lang
+					vars.put("lang", lang);
+				}else{
+					expandVars(step, vars);
+					tmpSteps.add(step);
+				}
+			}
+			steps = tmpSteps;
+			if(dryRun) {
+				System.out.println("Config files used");
+				System.out.println(confFile.getAbsolutePath());
+				for(File path: included.keySet()) {
+					System.out.println(path.getAbsolutePath());
+				}
+				System.out.println("Final values for variables after all includded files");
+				System.out.println(yamlMapper.writeValueAsString(vars.getVars()));
+				System.out.println("Final configuration after all files included and variables expanded");
+				System.out.println(yamlMapper.writeValueAsString(steps));
+				System.exit(0);
+			}
+			
 			String profileString = vars.get("profile");
 			String[] profilesActive = profileString.split(",");
 			if(profilesActive.length == 1 && "".equals(profilesActive[0])) profilesActive = null;
@@ -74,7 +116,7 @@ public class BuildRunner{
 				StepConfig stepConfig = buildStepConfig(step);
 
 				if(!isProfile(profilesActive,stepConfig.profiles)){
-					System.out.println("Skipping step "+step.get("type").asText()+" because ti is not in the active profile "+profileString);
+					System.out.println("Skipping step "+step.get("type").asText()+" because it is not in the active profile "+profileString);
 					continue;
 				}
 
@@ -205,18 +247,10 @@ public class BuildRunner{
 	private void loadFile(HashMap<File, File> included, List<JsonNode> steps, VarMap vars, File confFile, File file) throws JsonProcessingException, IOException {
 		try {			
 			JsonNode conf = yamlMapper.readTree(confFile);
-			
 			loadVars(vars, conf.get("defVars"), false);
 			loadVars(vars, conf.get("vars"), true);
-			
-			JsonNode stepsNode = conf.get("steps");
+
 			int count =0;
-			if(stepsNode != null && !stepsNode.isNull() && stepsNode.isArray()){			
-				count = stepsNode.size();
-				for(int i=0; i<count; i++){
-					steps.add(stepsNode.get(i));
-				}
-			}
 			
 			JsonNode includesNode = conf.get("include");
 			if(includesNode != null && !includesNode.isNull() && includesNode.isArray()){
@@ -231,6 +265,15 @@ public class BuildRunner{
 					}
 				}
 			}
+
+			JsonNode stepsNode = conf.get("steps");
+			if(stepsNode != null && !stepsNode.isNull() && stepsNode.isArray()){			
+				count = stepsNode.size();
+				for(int i=0; i<count; i++){
+					steps.add(stepsNode.get(i));
+				}
+			}
+			
 		} catch (Exception e) {
 			log.error("Errro loading file "+confFile.getAbsolutePath(),e);
 		}
@@ -267,7 +310,8 @@ public class BuildRunner{
 		return false;
 	}
 
-	public static final void expandVars(JsonNode node, VarMap vars) {
+	public static final JsonNode expandVars(JsonNode node, VarMap vars) {
+		
 		if(node.isArray()){
 			int count = node.size();
 			ArrayNode arr = (ArrayNode) node;
@@ -289,8 +333,17 @@ public class BuildRunner{
 					expandVars(next.getValue(), vars);
 			}
 		}
+		return node;
 	}
 	
+	
+	public static <T extends JsonNode> T copy(ObjectMapper mapper, T node) {
+		try {
+			return (T) mapper.readTree(node.traverse());
+		} catch (IOException e) {
+			throw new AssertionError(e);
+		}
+	}
 
 	public static void loadVars(VarMap map, JsonNode node, boolean replace){
 		if(node == null || node.isNull()) return;
@@ -300,7 +353,8 @@ public class BuildRunner{
 		while(fields.hasNext()){
 			Entry<String, JsonNode> next = fields.next();
 			String key = next.getKey();
-			if(replace || !map.containsKey(key)) map.put(key, next.getValue().asText());
+			// if the new variable has some expression for expanding, do it now, so variables can also be combined
+			if(replace || !map.containsKey(key)) map.put(key, map.expand(next.getValue().asText()));
 		}		
 	}
 

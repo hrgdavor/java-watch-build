@@ -147,7 +147,7 @@ public class TestJSIntegration {
 		vars.put("profile", profile);
 
 		BuildRunner buildRunner = new BuildRunner(yamlMapper, mapper);
-		buildRunner.run(file, true, vars);
+		buildRunner.run(file, true, false, vars);
 	}    
 
 }

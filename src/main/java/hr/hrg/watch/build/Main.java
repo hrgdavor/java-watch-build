@@ -34,43 +34,36 @@ public class Main {
 				e.printStackTrace();
 			}
 		}else if(args[0].endsWith(".yml") || args[0].endsWith(".yaml")){
-			boolean watch = args.length > 1 && "true".equalsIgnoreCase(args[1]);
+			boolean watch  = false;
+			boolean dryRun = false;
 
-			String profile = null;
-			if(args.length > 2) profile = args[2];
-			String lang = null;
-			if(args.length > 3) profile = args[3];
-			
-			runBuild(args[0], profile, lang, watch);
-			
-			if(args.length > 4){
-				String[] args2 = new String[args.length-4];
-				System.arraycopy(args, 4, args2, 0, args.length-4);
-				main(args2);
+			for(int i=1; i<args.length; i++) {
+				if("--watch".equals(args[i])) watch = true;
+				else if("--dry-run".equals(args[i])) dryRun = true;
 			}
+			
+			runBuild(args[0], watch, dryRun);
+			
 		}else{
 			System.out.println("Supporting only script(*.js) or YAML configuration (*.yml,*.yaml)");
 		}
 
 	}
 	
-	public static void runBuild(String file, String profile, String language, boolean watch) {
+	public static void runBuild(String file, boolean watch, boolean dryRun) {
 		HashMap<String, String> vars = new HashMap<>();
-		if(language != null) vars.put("lang",    language);
-		if(profile  != null) vars.put("profile", profile);
 
 		BuildRunner buildRunner = new BuildRunner(yamlMapper, mapper);
 
-		buildRunner.run(file, watch, vars);
+		buildRunner.run(file, watch, dryRun, vars);
 	}
 
 	public static void printHelp(){
-		System.out.println("Usage: conf|script [watch profile lang]");
-		System.out.println("\t conf - configuration file in yml format (requires profile and lang)");
-		System.out.println("\t script - javascript script that will be executed using nashorn");
-		System.out.println("\t lang - continue watching after build");
-		System.out.println("\t profile - build profile (this can influence which steps are executed)");
-		System.out.println("\t lang - build language");
+		System.out.println("Usage: conf|script ");
+		System.out.println("\t conf      - configuration file in yml format (requires profile and lang)");
+		System.out.println("\t script    - javascript script that will be executed using nashorn");
+		System.out.println("\t --watch   - continue watching after build");
+		System.out.println("\t --dry-run - show final configuration for checking the end result is what was intended");
 		System.exit(0);
 	}
 }
