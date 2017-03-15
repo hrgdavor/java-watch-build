@@ -17,6 +17,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.Result;
@@ -40,8 +43,11 @@ public class JsBundlesRunner implements Runnable{
 	// burst update wait time
 	private int burstDelay = 50;
 
-	public JsBundlesRunner(JsBundlesConfig.Item config){
+	private ObjectMapper mapper;
+
+	public JsBundlesRunner(JsBundlesConfig.Item config, ObjectMapper mapper){
 		this.config = config;
+		this.mapper = mapper;
 	}
 
 	public void start(boolean watch) {
@@ -86,11 +92,42 @@ public class JsBundlesRunner implements Runnable{
 		}
 		
 		Collections.sort(paths);
-		writeText(paths);
-		writeJson(paths);
-		writeJS(paths);
+		
+		List<PathWithWeight> pathsToBuild = new ArrayList<JsBundlesRunner.PathWithWeight>();
 		
 		
+		for(PathWithWeight pw: paths){
+			if(pw.path.getFileName().toString().endsWith(".json")) {
+				fillFromBundle(pathsToBuild, pw.path, pw.weight);
+			}else {
+				pathsToBuild.add(pw);
+			}
+		}
+		
+		writeText(pathsToBuild);
+		writeJson(pathsToBuild);
+		writeJS(pathsToBuild);
+		
+		
+	}
+
+	private void fillFromBundle(List<PathWithWeight> pathsToBuild, Path bundleFile, int weight) {
+		try {
+			JsonNode bundle = mapper.readTree(bundleFile.toFile());
+			ArrayNode files = (ArrayNode) bundle.get("files");
+			for(JsonNode scriptNode: files) {
+				String scriptFile = scriptNode.get("script").asText();
+				Path scriptPath = bundleFile.resolveSibling(scriptFile);
+				long modified = scriptNode.get("modified").asLong();
+				if(scriptFile.endsWith(".json")){
+					fillFromBundle(pathsToBuild, scriptPath, weight);
+				}else {
+					pathsToBuild.add(new PathWithWeight(scriptPath, weight));					
+				}
+			}
+		} catch (Exception e) {
+			log.error("Error loading js bundle "+bundleFile.toAbsolutePath());
+		}		
 	}
 
 	private void writeJS(List<PathWithWeight> paths) {

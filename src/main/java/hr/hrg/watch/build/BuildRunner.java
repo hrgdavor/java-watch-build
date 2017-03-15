@@ -206,7 +206,7 @@ public class BuildRunner{
 					JsBundlesConfig jsBundlesConfig = (JsBundlesConfig) stepConfig;
 					
 					for(JsBundlesConfig.Item item: jsBundlesConfig.sets){
-						JsBundlesRunner jbr = new JsBundlesRunner(item);
+						JsBundlesRunner jbr = new JsBundlesRunner(item, objectMapper);
 						
 						jbr.start(watch);
 						
