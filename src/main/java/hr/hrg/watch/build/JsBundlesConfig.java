@@ -10,9 +10,9 @@ class JsBundlesConfig extends StepConfig{
 		public String name;
 		public boolean compareBytes = true;
 		public String root;
-		public String output = "/dev/null";
-		public String outputJS = "/dev/null";
-		public String outputText = "/dev/null";
+		public String suffix;
+		public boolean outputJS;
+		public boolean outputText;
 		public String compilationLevel = "SIMPLE";
 		public List<String> include = new ArrayList<>();
 		public List<String> exclude = new ArrayList<>();

@@ -45,13 +45,19 @@ public class JsBundlesRunner implements Runnable{
 
 	private ObjectMapper mapper;
 
+	private Path rootPath;
+
 	public JsBundlesRunner(JsBundlesConfig.Item config, ObjectMapper mapper){
 		this.config = config;
 		this.mapper = mapper;
 	}
 
 	public void start(boolean watch) {
-		watcher = new GlobWatcher(Paths.get(config.root),true);
+		if(BuildRunner.isNoOutput(config.root)) return;
+				
+		rootPath = Paths.get(config.root);
+		
+		watcher = new GlobWatcher(rootPath,true);
 
 		File root = watcher.getRootPath().toFile();
 		for(String inc:config.include){
@@ -72,6 +78,9 @@ public class JsBundlesRunner implements Runnable{
 	}
 
 	private void genBundle() {
+		if(BuildRunner.isNoOutput(config.root)) return;
+		
+		
 		List<PathWithWeight> paths = new ArrayList<JsBundlesRunner.PathWithWeight>();
 		
 		List<PathMatcher> includes = watcher.getIncludes();
@@ -104,11 +113,11 @@ public class JsBundlesRunner implements Runnable{
 			}
 		}
 		
+		
 		writeText(pathsToBuild);
 		writeJson(pathsToBuild);
 		writeJS(pathsToBuild);
-		
-		
+
 	}
 
 	private void fillFromBundle(List<PathWithWeight> pathsToBuild, Path bundleFile, int weight) {
@@ -131,16 +140,18 @@ public class JsBundlesRunner implements Runnable{
 	}
 
 	private void writeJS(List<PathWithWeight> paths) {
-		if(BuildRunner.isNoOutput(config.outputJS)) return;
+		if(!config.outputJS) return;
 		long start = System.currentTimeMillis();
 
+		String outputJS = buildFileName("js");
+		
 		PrintWriter writer = null;
 		PrintWriter writer2 = null;
 		try {			
-			log.info("Generating "+config.outputJS);
+			log.info("Generating "+outputJS);
 			com.google.javascript.jscomp.Compiler compiler = new com.google.javascript.jscomp.Compiler();
 			CompilerOptions options = new CompilerOptions();
-			options.sourceMapOutputPath = config.outputJS+".map";
+			options.sourceMapOutputPath = outputJS+".map";
 
 			CompilationLevel level = CompilationLevel.fromString(config.compilationLevel.toUpperCase());
 			if(level == null){
@@ -175,30 +186,30 @@ public class JsBundlesRunner implements Runnable{
 
 			writer.write(compiler.toSource());
 			writer.println();
-			writer.write("//# sourceMappingURL="+new File(options.sourceMapOutputPath).getName());
+			writer.write("//# sourceMappingURL="+options.sourceMapOutputPath);
 			writer.close();
 
-			if(TaskUtils.writeFile(Paths.get(config.outputJS), byteOutput.toByteArray(), compareBytes)){
-				log.info("Generating "+config.output+" DONE "+(System.currentTimeMillis()-start)+"ms");
+			if(TaskUtils.writeFile(rootPath.resolve(outputJS), byteOutput.toByteArray(), compareBytes)){
+				log.info("Generating "+outputJS+" DONE "+(System.currentTimeMillis()-start)+"ms");
 				log.info("Generating "+options.sourceMapOutputPath);
 				start = System.currentTimeMillis();
-				writer2 = new PrintWriter(options.sourceMapOutputPath);
+				writer2 = new PrintWriter(rootPath.resolve(options.sourceMapOutputPath).toFile());
 				result.sourceMap.appendTo(writer2, options.sourceMapOutputPath);
 				writer2.close();
 				log.info("Generating "+options.sourceMapOutputPath+" DONE "+(System.currentTimeMillis()-start)+"ms");				
 			}else{
-				log.trace("skip identical: "+config.outputJS);
+				log.trace("skip identical: "+outputJS);
 			}
 			
 		} catch (Exception e) {
-			log.error("unable to write "+config.outputJS,e);
+			log.error("unable to write "+outputJS,e);
 			if(writer != null)  writer.close();
 			if(writer2 != null) writer2.close();
 		}
 	}
 
 	private void writeJson(List<PathWithWeight> paths) {
-		if(BuildRunner.isNoOutput(config.output)) return;
+		String output = buildFileName("json");
 		PrintWriter writer = null;
 		try {			
 			ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
@@ -220,23 +231,33 @@ public class JsBundlesRunner implements Runnable{
 			writer.write("]}");
 			writer.close();
 
-			if(TaskUtils.writeFile(Paths.get(config.output), byteOutput.toByteArray(), compareBytes)){
-				log.info("Generating "+config.output);
+			if(TaskUtils.writeFile(rootPath.resolve(output), byteOutput.toByteArray(), compareBytes)){
+				log.info("Generating "+output);
 			}else{
-				log.trace("skip identical: "+config.output);
+				log.trace("skip identical: "+output);
 			}
 
 		} catch (Exception e) {
-			log.error("unable to write "+config.output,e);
+			log.error("unable to write "+output,e);
 			if(writer != null) writer.close();
 		}
 	}
 
+	private String buildFileName(String ext){
+		StringBuilder sb = new StringBuilder("bundle.").append(config.name);
+		if(config.suffix != null && !"".equals(config.suffix)) {
+			sb.append(".").append(config.suffix);
+		}
+		sb.append(".").append(ext);
+		return sb.toString();
+	}
+	
 	private void writeText(List<PathWithWeight> paths) {
-		if(BuildRunner.isNoOutput(config.outputText)) return;
-
+		if(!config.outputText) return;
+		String outputText = buildFileName("txt");
+		
 		PrintWriter writer = null;
-		try {			
+		try {
 			ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 			writer = new PrintWriter(new OutputStreamWriter(byteOutput));
 
@@ -247,17 +268,17 @@ public class JsBundlesRunner implements Runnable{
 			}
 			writer.close();
 
-			if(TaskUtils.writeFile(Paths.get(config.outputText), byteOutput.toByteArray(), compareBytes)){
-				log.info("Generating "+config.outputText);
+			if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), compareBytes)){
+				log.info("Generating "+outputText);
 			}else{
-				log.trace("skip identical: "+config.outputText);
+				log.trace("skip identical: "+outputText);
 			}
 		} catch (Exception e) {
-			log.error("unable to write "+config.outputText,e);
+			log.error("unable to write "+outputText,e);
 			if(writer != null) writer.close();
 		}
 	}
-	
+
 	@Override
 	public void run() {
 

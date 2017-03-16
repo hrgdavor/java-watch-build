@@ -103,10 +103,6 @@ public class BuildRunner{
 				System.exit(0);
 			}
 			
-			String profileString = vars.get("profile");
-			String[] profilesActive = profileString.split(",");
-			if(profilesActive.length == 1 && "".equals(profilesActive[0])) profilesActive = null;
-			
 			List<Thread> threads = new ArrayList<>();
 			int count = steps.size();
 			
@@ -114,11 +110,6 @@ public class BuildRunner{
 			for(int i=0; i<count; i++){
 				JsonNode step = steps.get(i);
 				StepConfig stepConfig = buildStepConfig(step);
-
-				if(!isProfile(profilesActive,stepConfig.profiles)){
-					System.out.println("Skipping step "+step.get("type").asText()+" because it is not in the active profile "+profileString);
-					continue;
-				}
 
 				if(stepConfig instanceof CopyConfig){
 					CopyConfig copyStep = (CopyConfig) stepConfig;
@@ -211,7 +202,7 @@ public class BuildRunner{
 						jbr.start(watch);
 						
 						if(watch)
-							threads.add(new Thread(jbr,"JsBundle:"+item.name+"-to-"+item.output));
+							threads.add(new Thread(jbr,"JsBundle:"+item.name+"-to-"+item.root));
 						
 					}
 					
@@ -261,7 +252,7 @@ public class BuildRunner{
 	}
 
 	private void loadFile(HashMap<File, File> included, List<JsonNode> steps, VarMap vars, File confFile, File file) throws JsonProcessingException, IOException {
-		try {			
+		try {
 			JsonNode conf = yamlMapper.readTree(confFile);
 			loadVars(vars, conf.get("defVars"), false);
 			loadVars(vars, conf.get("vars"), true);
@@ -314,18 +305,6 @@ public class BuildRunner{
 		}else{
 			throw new RuntimeException("Unsupported step type: "+type);
 		}
-	}
-
-	private boolean isProfile(String[] profilesGlobal, List<String> profiles) {
-		// profile not defined (all can pass)
-		if(profilesGlobal == null || profilesGlobal.length == 0) return true;
-		if(profiles == null || profiles.isEmpty()) return true;
-		for (String tmp : profiles){
-			for (String profile : profilesGlobal){
-				if(tmp.equals(profile)) return true;			
-			}
-		}
-		return false;
 	}
 
 	public static final JsonNode expandVars(JsonNode node, VarMap vars) {
