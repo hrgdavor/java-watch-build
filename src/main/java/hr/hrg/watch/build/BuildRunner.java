@@ -63,18 +63,16 @@ public class BuildRunner{
 				}
 			}
 
-			// multiply steps that are per language
+			// multiply steps that are perLanguage
 			List<JsonNode> tmpSteps = new ArrayList<>();
 			String lang = vars.get("lang");
-			String languagesStr = vars.get("langs");
+			if(lang == null ) lang = "";
 			String[] langs = new String[]{lang};
-			if(languagesStr != null) {
-				langs = languagesStr.split(",");
-			}
-			if(lang == null) {
+			if(lang.indexOf(',') != -1) {
+				langs = lang.split(",");
 				lang = langs[0];
 			}
-			// TODO read languages var
+
 			for(JsonNode step: steps){
 				if(langs.length >1 && step.get("perLanguage") != null && step.get("perLanguage").booleanValue()){
 					for(String tmpLang:langs) {
@@ -90,12 +88,14 @@ public class BuildRunner{
 				}
 			}
 			steps = tmpSteps;
+
 			if(dryRun) {
 				System.out.println("Config files used");
 				System.out.println(confFile.getAbsolutePath());
 				for(File path: included.keySet()) {
 					System.out.println(path.getAbsolutePath());
 				}
+				System.out.println("languages: "+objectMapper.writeValueAsString(langs));
 				System.out.println("Final values for variables after all includded files");
 				System.out.println(yamlMapper.writeValueAsString(vars.getVars()));
 				System.out.println("Final configuration after all files included and variables expanded");
