@@ -2,7 +2,7 @@
 #Introduction
 Command line utility for building projects
 
-Latest release is [0.2.0](releases/tag/v0.2.0) but you can build the current SNAPSHOT with maven and use that.
+Latest release is [0.2.0](/hrgdavor/java-watch-build/releases/tag/v0.2.0) but you can build the current SNAPSHOT with maven and use that.
 
 # Command line Usage
 
