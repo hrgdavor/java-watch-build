@@ -20,8 +20,7 @@ public class LangTaskFactory extends AbstractTaskFactory{
 	public void startOne(String inlineParam, JsonNode root, boolean watch) {
 		LangConfig config = mapper.convertValue(root, LangConfig.class);
 
-		LangTask task = new LangTask(config, core.getOutputRoot(),yamlMapper, mapper);
-		core.registerTask(inlineParam, task);
+		LangTask task = new LangTask(config, inlineParam,core, core.getOutputRoot(),yamlMapper, mapper);
 	
 		task.start(watch);
 

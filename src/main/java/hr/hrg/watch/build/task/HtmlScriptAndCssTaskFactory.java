@@ -36,7 +36,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 		Task task = new Task(config, core.getOutputRoot());
 		task.start(watch);
 		if(watch)
-			core.addThread(new Thread(task,"Gzip:"+config.input+" to "+config.output));
+			core.addThread(new Thread(task,"HtmlAndScript:"+config.input+" to "+config.output));
 
 	}
 	
@@ -198,7 +198,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 		@Override
 		public void run() {
 			
-			new Thread(new Runnable() {
+			Thread includesThread = new Thread(new Runnable() {
 				public void run() {
 					while(!Thread.interrupted()){
 						Collection<Path> changes = scriptsToWatch.takeBatchFiles(config.burstDelay);
@@ -210,8 +210,10 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 							genHtml(file);
 						}
 					}
+					scriptsToWatch.stop();
 				}
-			},Thread.currentThread().getName()+"-includes").start();
+			},Thread.currentThread().getName()+"-includes");
+			includesThread.start();
 			
 			
 			while(!Thread.interrupted()){
@@ -224,6 +226,13 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 					if(log.isInfoEnabled())	log.info("changed: "+p+" "+p.toFile().lastModified());
 					genHtml(p);
 				}
+			}
+			watcher.stop();
+			includesThread.interrupt();
+			try {
+				includesThread.join(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.LanguageChangeListener;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.config.LangConfig;
 
@@ -45,13 +46,18 @@ public class LangTask implements Runnable{
 
 	private LangConfig config;
 
+	private Main core;
 
-	public LangTask(LangConfig config, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
+
+	public LangTask(LangConfig config, String lang, Main core, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
 		this.config = config;
+		this.core = core;
 		this.root = root;
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
-
+		
+		core.registerTask(lang, this);
+		
 		File f = new File(config.input);
 		if(!f.exists()) throw new RuntimeException("Input file does not exist "+config.input+" "+f.getAbsolutePath());
 
@@ -83,6 +89,7 @@ public class LangTask implements Runnable{
 				genFiles(changeEntry);
 			}
 		}
+		folderWatcher.stop();
 	}
 
 	protected boolean genFiles(Path from){

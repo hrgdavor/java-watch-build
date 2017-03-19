@@ -85,6 +85,7 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 					compressFile(path, toFile);
 				}
 			}
+			fromGlob.stop();
 		}
 	
 		

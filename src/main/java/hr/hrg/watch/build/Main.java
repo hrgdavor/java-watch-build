@@ -3,6 +3,7 @@ package hr.hrg.watch.build;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class Main {
 		
 		if(args[0].endsWith(".js")){
 			ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-			String script = "var hrhrgwatchbuildMain = Java.type('hr.hrg.watch.build.MainOld');" 
+			String script = "var hrhrgwatchbuildMain = Java.type('hr.hrg.watch.build.Main');" 
 					+"function alert(x){print(x);};\n"
 					+"function runBuild(conf,profile,lang,watch){\n"
 					+"	hrhrgwatchbuildMain.runBuild(conf,profile,lang,watch);\n"
@@ -142,13 +143,68 @@ public class Main {
 		}
 		
 		runBuild(args[0]);
+		if(!watch) return;
+		
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			String line = null;
+			while((line=br.readLine()) != null) {
+				if(line.toLowerCase().equals("r")){
+					restartBuild();
+				}else if(line.toLowerCase().equals("s")){
+					stopBuild();
+				}else if(line.toLowerCase().equals("q")){
+					stopBuild();
+					System.exit(0);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
+	public boolean stopped(){
+		for(Thread thread: threads){
+			System.out.println("THREAD: "+thread.getName());
+			if(thread.isAlive()) return false;
+		}
+		return true;		
+	}
+
+	public void stopBuild(){
+		if(threads.size() >0) System.out.println("Stopping "+threads.size()+" watch threads");
+		for(Thread thread: threads){
+			System.out.println("THREAD: "+thread.getName());
+			thread.interrupt();
+		}
+		long stopTime = System.currentTimeMillis();
+		while(!Thread.interrupted()) {
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if(stopped()) break;
+		}
+		System.out.println("Stopped "+threads.size()+" threads in "+(System.currentTimeMillis() - stopTime)+" ms");
+		System.out.println("\n\n\n");
+		threads.clear();
+		namedTasks.clear();
+		included.clear();
+	}
+	
+	public void restartBuild() {
+		stopBuild();
+		startBuild();
+	}
 	public void runBuild(String file) {
+		confFile = Paths.get(file);
+		outputRoot = confFile.toAbsolutePath().getParent();
+		startBuild();
+	}
+
+	public void startBuild() {
 		try {
-			
-			confFile = Paths.get(file);
-			outputRoot = confFile.toAbsolutePath().getParent();
 			
 			loadFile(confFile);
 			
@@ -167,7 +223,14 @@ public class Main {
 	enum Token {START,TASK,OPTION}
 	
 	public void loadFile(Path confFile){
-	
+		confFile = confFile.toAbsolutePath();
+		
+		if(included.containsKey(confFile)) {
+			System.out.println("Skipping already included conf: "+confFile);
+			return;
+		}
+		included.put(confFile, confFile);
+		
 		String newLine = System.getProperty("line.separator");
 
 		String line = null;
@@ -232,7 +295,8 @@ public class Main {
 
 					// all comment lines are kept trimmed for easier checking later if the line is comment line
 					// but we need to keep them so proper line numbers could be reported in case of errors
-					option.lines.add(TaskUtils.emptyOrcomment(trimmed) ? trimmed:line);
+					if(option != null) // ignore initial comment and empty lines
+						option.lines.add(TaskUtils.emptyOrcomment(trimmed) ? trimmed:line);
 				}
 			}
 			finishTaskProcessing(task,hasNonEmptyLines);
@@ -263,6 +327,7 @@ public class Main {
 			}
 			TaskFactory taskFactory = runners.get(task.type);
 			if(taskFactory == null) {
+				System.out.println("Please use one of available task runners: "+getJson(runners.keySet()));
 				throw new RuntimeException(" Task runner type: "+task.type+" not found "+task.confFile.toAbsolutePath()+":"+task.lineNumber);
 			}else {
 				if(task.options.get(0).type == null) {
@@ -273,8 +338,10 @@ public class Main {
 					ArrayList<Object> options = new ArrayList<>();
 					for(TaskOption op: task.options) {
 						OptionParser optionParser = parsers.get(op.type);
-						if(optionParser == null)
+						if(optionParser == null) {
+							System.out.println("Please use one of available option parsers: "+getJson(parsers.keySet()));
 							throw new RuntimeException(" OptionParser type: "+op.type+" not found "+op.confFile.toAbsolutePath()+":"+op.lineNumber);
+						}
 						
 						options.add(optionParser.parse(op));
 					}
@@ -326,6 +393,10 @@ public class Main {
 	
 	public void registerTask(String code, Object task) {
 		this.namedTasks.put(code, task);
+	}
+
+	public void unregisterTask(String code, Object task) {
+		this.namedTasks.remove(code);
 	}
 
 	public Object getTask(String code) {

@@ -109,6 +109,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 				}
 			}
 		}
+		fromGlob.stop();
 	}
 
 	

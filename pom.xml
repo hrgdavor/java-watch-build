@@ -118,7 +118,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>hr.hrg.watch.build.MainOld</mainClass>
+									<mainClass>hr.hrg.watch.build.Main</mainClass>
 								</transformer>
 							</transformers>
 							<shadedArtifactAttached>true</shadedArtifactAttached>

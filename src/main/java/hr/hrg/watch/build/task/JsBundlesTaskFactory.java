@@ -37,8 +37,6 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	Logger log = LoggerFactory.getLogger(JsBundlesTaskFactory.class);
 
 	Map<Path, SourceFile> codeCache = new HashMap<>();	
-	private Path rootPath;
-	GlobWatcher watcher;
 
 	public JsBundlesTaskFactory(Main core, ObjectMapper mapper){
 		super(core,mapper);
@@ -57,6 +55,8 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	class Task implements Runnable{
 
 		private JsBundlesConfig config;
+		private Path rootPath;
+		GlobWatcher watcher;
 
 		Task(JsBundlesConfig config){
 			this.config = config;
@@ -310,7 +310,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 				genBundle();
 			}
-			
+			watcher.stop();
 		}
 	}
 
