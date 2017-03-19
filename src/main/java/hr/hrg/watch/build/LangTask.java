@@ -1,6 +1,7 @@
 package hr.hrg.watch.build;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +32,6 @@ public class LangTask implements Runnable{
 	protected GlobWatcher folderWatcher;
 	
 	public static final int BUFFER_SIZE = 4096;
-	private List<String> output;
 	private List<LanguageChangeListener> listeners = new ArrayList<>();
 	private Path root;
 	
@@ -39,17 +39,21 @@ public class LangTask implements Runnable{
 	private long lastModified;
 	private ObjectMapper objectMapper;
 	private YAMLMapper yamlMapper;
-	private String varName;
-	private boolean compareBytes = true;
+
+	private LangConfig config;
 
 
-	public LangTask(GlobWatcher watcher, Path root,List<String> output, YAMLMapper yamlMapper, ObjectMapper objectMapper, String varName){
-		this.folderWatcher = watcher;
+	public LangTask(LangConfig config, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
+		this.config = config;
 		this.root = root;
-		this.output = output;
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
-		this.varName = varName;
+
+		File f = new File(config.input);
+		if(!f.exists()) throw new RuntimeException("Input file does not exist "+config.input+" "+f.getAbsolutePath());
+
+		folderWatcher = new GlobWatcher(f.getParentFile().getAbsoluteFile().toPath(), false);
+		folderWatcher.includes(f.getName());
 	}
 
 	public void start(boolean watch){
@@ -87,8 +91,8 @@ public class LangTask implements Runnable{
 		}
 		this.lastModified = update.lastModified;
 
-		if(output != null){
-			for(String out: this.output){
+		if(config.output != null){
+			for(String out: config.output){
 				this.genFile(update.newTrans, root.resolve(out));
 			}			
 		}
@@ -195,7 +199,7 @@ public class LangTask implements Runnable{
 	
 	private void genJs(Map<String, String> newTrans, OutputStream out) {
 		try {
-			out.write(("var "+varName+" = ").getBytes());
+			out.write(("var "+config.varName+" = ").getBytes());
 			objectMapper.writeValue(out,newTrans);	
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -243,7 +247,7 @@ public class LangTask implements Runnable{
 			throw new RuntimeException("File type not supported "+to);
 		}
 		
-		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), compareBytes)){
+		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), config.compareBytes)){
 			log.info("Generating "+to);
 			return true;
 		}else{
@@ -312,13 +316,5 @@ public class LangTask implements Runnable{
 	
 	public long lastModified() {
 		return lastModified;
-	}
-	
-	public void setCompareBytes(boolean compareBytes) {
-		this.compareBytes = compareBytes;
-	}
-	
-	public boolean isCompareBytes() {
-		return compareBytes;
-	}
+	}	
 }

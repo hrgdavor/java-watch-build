@@ -8,7 +8,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -19,9 +21,9 @@ import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.LangTask.Update;
 
-public class CompTask extends CopyTask implements LanguageChangeListener{
+public class JsCompTask implements LanguageChangeListener, Runnable{
 
-	Logger log = LoggerFactory.getLogger(CopyTask.class);
+	Logger log = LoggerFactory.getLogger(JsCompTask.class);
 	
 	public static final int BUFFER_SIZE = 4096;
 	private long burstDelay = 20;
@@ -29,10 +31,31 @@ public class CompTask extends CopyTask implements LanguageChangeListener{
 	VarExpander exp = new VarExpander(VarExpander.PATTERN_LANG);
 
 	private LangTask langTask;
+	private Path toPath;
+	private GlobWatcher fromGlob;
+	private JsCompConfig config;
 	
-	public CompTask(GlobWatcher from, Path to, LangTask langTask){
-		super(from, to);
+	public JsCompTask(Path outputRoot, JsCompConfig config, LangTask langTask){
+		this.config = config;
 		this.langTask = langTask;
+
+		
+		fromGlob = new GlobWatcher(Paths.get(config.input));
+		
+		toPath = outputRoot.resolve(config.output);
+		
+		List<String> includeWithHtml = new ArrayList<>(config.include); 
+		
+		for(String pattern : config.include){
+			if(pattern.endsWith(".js")){
+				String pHtml = pattern.substring(0, pattern.length()-3)+".html";
+				if(!includeWithHtml.contains(pHtml)) includeWithHtml.add(pHtml);
+			}
+		}
+		
+		fromGlob.includes(includeWithHtml);
+		fromGlob.excludes(config.exclude);
+
 		if(langTask != null) 
 			langTask.addLanguageChangeListener(this);
 		else throw new NullPointerException("LangTask can not be null");
@@ -111,7 +134,7 @@ public class CompTask extends CopyTask implements LanguageChangeListener{
 		combineTemplate(from, tplFile,out);
 		byte[] newBytes = out.toByteArray();			
 
-		if(TaskUtils.writeFile(to, newBytes, compareBytes)){
+		if(TaskUtils.writeFile(to, newBytes, config.compareBytes)){
 			log.info("generated:      "+to);
 			return true;
 		}else{
