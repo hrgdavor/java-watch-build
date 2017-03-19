@@ -89,7 +89,7 @@ public class LangTask implements Runnable{
 				genFiles(changeEntry);
 			}
 		}
-		folderWatcher.stop();
+		folderWatcher.close();
 	}
 
 	protected boolean genFiles(Path from){

@@ -210,7 +210,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 							genHtml(file);
 						}
 					}
-					scriptsToWatch.stop();
+					scriptsToWatch.close();
 				}
 			},Thread.currentThread().getName()+"-includes");
 			includesThread.start();
@@ -227,7 +227,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 					genHtml(p);
 				}
 			}
-			watcher.stop();
+			watcher.close();
 			includesThread.interrupt();
 			try {
 				includesThread.join(1000);

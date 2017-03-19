@@ -310,7 +310,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 				genBundle();
 			}
-			watcher.stop();
+			watcher.close();
 		}
 	}
 

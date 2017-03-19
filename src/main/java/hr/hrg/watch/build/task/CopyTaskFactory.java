@@ -87,7 +87,7 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 					copyFile(path, toFile);
 				}
 			}
-			fromGlob.stop();
+			fromGlob.close();
 		}
 	
 		
