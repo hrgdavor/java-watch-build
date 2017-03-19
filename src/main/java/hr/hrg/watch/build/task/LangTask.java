@@ -80,16 +80,19 @@ public class LangTask implements Runnable{
 	}
 
 	public void run(){
-		while(!Thread.interrupted()){
-			Collection<Path> changes = folderWatcher.takeOrNullFiles();
-			if(changes == null) break; // null means interrupted, and we should end this loop
-
-			for (Path changeEntry : changes) {
-				if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.toFile().lastModified());
-				genFiles(changeEntry);
+		try {			
+			while(!Thread.interrupted()){
+				Collection<Path> changes = folderWatcher.takeOrNullFiles();
+				if(changes == null) break; // null means interrupted, and we should end this loop
+				
+				for (Path changeEntry : changes) {
+					if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.toFile().lastModified());
+					genFiles(changeEntry);
+				}
 			}
+		} finally {
+			folderWatcher.close();
 		}
-		folderWatcher.close();
 	}
 
 	protected boolean genFiles(Path from){

@@ -40,7 +40,7 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 	
 	class Task implements Runnable {
 
-		private GlobWatcher fromGlob;
+		private GlobWatcher watcher;
 		protected Path toPath;
 		private CopyConfig config;
 
@@ -55,39 +55,43 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 			}
 			if(!f.exists()) throw new RuntimeException("Folder and alternatives do not exist "+config.input+" "+f.getAbsolutePath());
 			
-			fromGlob = new GlobWatcher(f.getAbsoluteFile().toPath());
+			watcher = new GlobWatcher(f.getAbsoluteFile().toPath());
 			
-			fromGlob.includes(config.include);
-			fromGlob.excludes(config.exclude);
+			watcher.includes(config.include);
+			watcher.excludes(config.exclude);
 			toPath = core.getOutputRoot().resolve(config.output);
 		}
 		
 		public void start(boolean watch){
-			this.fromGlob.init(watch);
-			Collection<Path> files = fromGlob.getMatchedFiles();
+			this.watcher.init(watch);
+			Collection<Path> files = watcher.getMatchedFiles();
 			for (Path file : files) {
-				Path toFile = toPath.resolve(fromGlob.relativize(file));
+				Path toFile = toPath.resolve(watcher.relativize(file));
 				copyFile(file, toFile);
 			}
 		}
 	
 		public void run(){
-			while(!Thread.interrupted()){
-				Collection<FileChangeEntry<FileMatchGlob>> changes = fromGlob.takeBatch(core.getBurstDelay());
-				if(changes == null) break; // interrupted
-				
-				for (FileChangeEntry<FileMatchGlob> entry : changes){
-					Path path = entry.getPath();
+			try {
+				while(!Thread.interrupted()){
+					Collection<FileChangeEntry<FileMatchGlob>> changes = watcher.takeBatch(core.getBurstDelay());
+					if(changes == null) break; // interrupted
 					
-					if(path.toFile().isDirectory()) continue;
-					
-					log.info("changed:"+entry+" "+path.toFile().lastModified());
-					
-					Path toFile = toPath.resolve(fromGlob.relativize(path));
-					copyFile(path, toFile);
+					for (FileChangeEntry<FileMatchGlob> entry : changes){
+						Path path = entry.getPath();
+						
+						if(path.toFile().isDirectory()) continue;
+						
+						log.info("changed:"+entry+" "+path.toFile().lastModified());
+						
+						Path toFile = toPath.resolve(watcher.relativize(path));
+						copyFile(path, toFile);
+					}
 				}
+				
+			} finally {
+				watcher.close();
 			}
-			fromGlob.close();
 		}
 	
 		

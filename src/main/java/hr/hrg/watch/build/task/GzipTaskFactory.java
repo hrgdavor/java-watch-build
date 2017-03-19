@@ -40,7 +40,7 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 	
 	class Task implements Runnable {
 
-		private GlobWatcher fromGlob;
+		private GlobWatcher watcher;
 		protected Path toPath;
 		private GzipConfig config;
 
@@ -52,40 +52,44 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 			File f = new File(config.input);
 			if(!f.exists()) throw new RuntimeException("Folder does not exist "+config.input);
 			
-			fromGlob = new GlobWatcher(f.getAbsoluteFile().toPath());
+			watcher = new GlobWatcher(f.getAbsoluteFile().toPath());
 			
-			fromGlob.includes(config.include);
-			fromGlob.excludes(config.exclude);
+			watcher.includes(config.include);
+			watcher.excludes(config.exclude);
 			
 			toPath = core.getOutputRoot().resolve(config.output);
 		}
 		
 		public void start(boolean watch){
-			this.fromGlob.init(watch);
-			Collection<Path> files = fromGlob.getMatchedFiles();
+			this.watcher.init(watch);
+			Collection<Path> files = watcher.getMatchedFiles();
 			for (Path file : files) {
-				Path toFile = toPath.resolve(fromGlob.relativize(file)).resolveSibling(file.getFileName()+".gz");
+				Path toFile = toPath.resolve(watcher.relativize(file)).resolveSibling(file.getFileName()+".gz");
 				compressFile(file, toFile);
 			}
 		}
 	
 		public void run(){
-			while(!Thread.interrupted()){
-				Collection<FileChangeEntry<FileMatchGlob>> changes = fromGlob.takeBatch(core.getBurstDelay());
-				if(changes == null) break; // interrupted
-				
-				for (FileChangeEntry<FileMatchGlob> entry : changes){
-					Path path = entry.getPath();
+			try {
+				while(!Thread.interrupted()){
+					Collection<FileChangeEntry<FileMatchGlob>> changes = watcher.takeBatch(core.getBurstDelay());
+					if(changes == null) break; // interrupted
 					
-					if(path.toFile().isDirectory()) continue;
-					
-					log.info("changed:"+entry+" "+path.toFile().lastModified());
-					
-					Path toFile = toPath.resolve(fromGlob.relativize(path));
-					compressFile(path, toFile);
+					for (FileChangeEntry<FileMatchGlob> entry : changes){
+						Path path = entry.getPath();
+						
+						if(path.toFile().isDirectory()) continue;
+						
+						log.info("changed:"+entry+" "+path.toFile().lastModified());
+						
+						Path toFile = toPath.resolve(watcher.relativize(path));
+						compressFile(path, toFile);
+					}
 				}
+				
+			} finally {
+				watcher.close();
 			}
-			fromGlob.close();
 		}
 	
 		

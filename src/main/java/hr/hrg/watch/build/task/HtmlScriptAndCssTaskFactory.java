@@ -200,40 +200,48 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			
 			Thread includesThread = new Thread(new Runnable() {
 				public void run() {
-					while(!Thread.interrupted()){
-						Collection<Path> changes = scriptsToWatch.takeBatchFiles(config.burstDelay);
-						if(changes == null) break; // null means interrupted, and we should end this loop
-	
-						
-						for (Path file : htmlFiles) {
-							if(log.isInfoEnabled())	log.info("includes changed for: "+file);
-							genHtml(file);
-						}
+					try {
+						while(!Thread.interrupted()){
+							Collection<Path> changes = scriptsToWatch.takeBatchFiles(config.burstDelay);
+							if(changes == null) break; // null means interrupted, and we should end this loop
+							
+							
+							for (Path file : htmlFiles) {
+								if(log.isInfoEnabled())	log.info("includes changed for: "+file);
+								genHtml(file);
+							}
+						}						
+					} finally {
+						scriptsToWatch.close();
 					}
-					scriptsToWatch.close();
 				}
 			},Thread.currentThread().getName()+"-includes");
+
 			includesThread.start();
 			
-			
-			while(!Thread.interrupted()){
-				Collection<Path> changes = watcher.takeBatchFiles(config.burstDelay);
-				if(changes == null) break; // null means interrupted, and we should end this loop
-	
-				HashSet<Path> todo = new HashSet<>(changes);
+			try {
+				while(!Thread.interrupted()){
+					Collection<Path> changes = watcher.takeBatchFiles(config.burstDelay);
+					if(changes == null) break; // null means interrupted, and we should end this loop
+					
+					HashSet<Path> todo = new HashSet<>(changes);
+					
+					for(Path p:todo) {				
+						if(log.isInfoEnabled())	log.info("changed: "+p+" "+p.toFile().lastModified());
+						genHtml(p);
+					}
+				}
 				
-				for(Path p:todo) {				
-					if(log.isInfoEnabled())	log.info("changed: "+p+" "+p.toFile().lastModified());
-					genHtml(p);
+			} finally {
+				watcher.close();
+				includesThread.interrupt();
+				try {
+					includesThread.join(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
-			watcher.close();
-			includesThread.interrupt();
-			try {
-				includesThread.join(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+
 		}
 	}
 	static class BundleEntry{

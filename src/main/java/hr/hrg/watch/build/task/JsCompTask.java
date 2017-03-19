@@ -36,7 +36,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 
 	private LangTask langTask;
 	private Path toPath;
-	private GlobWatcher fromGlob;
+	private GlobWatcher watcher;
 	private JsCompConfig config;
 	
 	public JsCompTask(Path outputRoot, JsCompConfig config, LangTask langTask){
@@ -44,7 +44,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 		this.langTask = langTask;
 
 		
-		fromGlob = new GlobWatcher(Paths.get(config.input));
+		watcher = new GlobWatcher(Paths.get(config.input));
 		
 		toPath = outputRoot.resolve(config.output);
 		
@@ -57,8 +57,8 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 			}
 		}
 		
-		fromGlob.includes(includeWithHtml);
-		fromGlob.excludes(config.exclude);
+		watcher.includes(includeWithHtml);
+		watcher.excludes(config.exclude);
 
 		if(langTask != null) 
 			langTask.addLanguageChangeListener(this);
@@ -66,8 +66,8 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 	}
 	
 	public void start(boolean watch){
-		fromGlob.init(watch);
-		Collection<Path> files = fromGlob.getMatchedFiles(); 
+		watcher.init(watch);
+		Collection<Path> files = watcher.getMatchedFiles(); 
 		buildAll(files, true);
 	}
 
@@ -76,7 +76,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 			Path file = forceJs(fileChanged);
 			if(skipHtml && !file.equals(fileChanged)) continue;
 
-			Path toFile = toPath.resolve(fromGlob.relativize(file));
+			Path toFile = toPath.resolve(watcher.relativize(file));
 			buildComp(file, toFile);
 		}
 	}
@@ -96,20 +96,22 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 	}
 
 	public void run(){
-		while(!Thread.interrupted()){
-			Collection<FileChangeEntry<FileMatchGlob>> files = fromGlob.takeBatch(burstDelay);
-			if(files == null) break; // interrupted
-			for (FileChangeEntry<FileMatchGlob> fileChanged : files) {
-				Path file = forceJs(fileChanged.getPath());
-//				if(file.toFile().isDirectory()) continue;
-				log.info("changed:"+fileChanged+" "+fileChanged.getPath().toFile().lastModified());
-				Path toFile = toPath.resolve(fromGlob.relativize(file));
-				synchronized(this){
-					buildComp(file, toFile);					
+		try {			
+			while(!Thread.interrupted()){
+				Collection<FileChangeEntry<FileMatchGlob>> files = watcher.takeBatch(burstDelay);
+				if(files == null) break; // interrupted
+				for (FileChangeEntry<FileMatchGlob> fileChanged : files) {
+					Path file = forceJs(fileChanged.getPath());
+					log.info("changed:"+fileChanged+" "+fileChanged.getPath().toFile().lastModified());
+					Path toFile = toPath.resolve(watcher.relativize(file));
+					synchronized(this){
+						buildComp(file, toFile);					
+					}
 				}
 			}
+		} finally {
+			watcher.close();
 		}
-		fromGlob.close();
 	}
 
 	
@@ -178,7 +180,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 		new Thread(new Runnable(){
 			public void run(){
 				log.info("Rebuilding because of change in laguage file");
-				buildAll(fromGlob.getMatchedFiles(), true);
+				buildAll(watcher.getMatchedFiles(), true);
 			}
 		}).start();
 	}

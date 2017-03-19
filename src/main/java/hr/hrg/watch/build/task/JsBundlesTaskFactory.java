@@ -88,6 +88,30 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 			genBundle();
 		}
 	
+		
+		@Override
+		public void run() {
+	
+			try {
+				Collection<FileChangeEntry<FileMatchGlob>> changed = null;
+				while(!Thread.interrupted()){
+					
+					changed = watcher.takeBatch(core.getBurstDelay());
+					if(changed == null) break; // interrupted, thread should stop, stop the loop
+					
+					// clear changed files from cache
+					for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
+						if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
+						codeCache.remove(changeEntry.getPath());
+					}
+					
+					genBundle();
+				}				
+			} finally {
+				watcher.close();
+			}
+		}
+		
 		private void genBundle() {
 			if(TaskUtils.isNoOutput(config.root)) return;
 			
@@ -289,29 +313,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				if(writer != null) writer.close();
 			}
 		}
-	
-		@Override
-		public void run() {
-	
-			// single thread version that uses FolderWatcher.takeBatch(burstDelay) to wait for more burst changes
-			// before processing the changed files
-	
-			Collection<FileChangeEntry<FileMatchGlob>> changed = null;
-			while(!Thread.interrupted()){
-	
-				changed = watcher.takeBatch(core.getBurstDelay());
-				if(changed == null) break; // interrupted, thread should stop, stop the loop
-	
-				// clear changed files from cache
-				for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
-					if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
-					codeCache.remove(changeEntry.getPath());
-				}
-	
-				genBundle();
-			}
-			watcher.close();
-		}
+
 	}
 
 	static class PathWithWeight implements Comparable<PathWithWeight>{
