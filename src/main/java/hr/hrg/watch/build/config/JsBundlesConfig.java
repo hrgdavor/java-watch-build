@@ -1,9 +1,9 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class JsBundlesConfig{
+public class JsBundlesConfig{
 	public String name;
 	public boolean compareBytes = true;
 	public String root;

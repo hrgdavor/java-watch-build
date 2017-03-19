@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -24,6 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
+import hr.hrg.watch.build.LanguageChangeListener;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.config.LangConfig;
 
 public class LangTask implements Runnable{
 

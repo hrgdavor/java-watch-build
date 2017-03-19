@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.option;
 
 public class OptionException extends RuntimeException {
 	private int optionIndex = 0;

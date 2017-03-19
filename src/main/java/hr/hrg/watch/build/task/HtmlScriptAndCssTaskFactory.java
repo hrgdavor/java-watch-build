@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,12 +17,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.config.HtmlScriptAndCssConfig;
 
-class HtmlScriptAndCssRunner extends AbstractTaskFactory{
+public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 
-	Logger log = LoggerFactory.getLogger(HtmlScriptAndCssRunner.class);
+	Logger log = LoggerFactory.getLogger(HtmlScriptAndCssTaskFactory.class);
 	
-	public HtmlScriptAndCssRunner(Main core, ObjectMapper mapper){
+	public HtmlScriptAndCssTaskFactory(Main core, ObjectMapper mapper){
 		super(core, mapper);
 	}
 	

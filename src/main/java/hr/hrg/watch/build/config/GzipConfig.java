@@ -1,9 +1,9 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class GzipConfig extends StepConfig{
+public class GzipConfig{
 	public String input;
 	public String output;
 	public List<String> include = new ArrayList<>();

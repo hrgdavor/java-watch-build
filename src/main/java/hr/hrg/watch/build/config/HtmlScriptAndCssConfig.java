@@ -1,9 +1,9 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class HtmlScriptAndCssConfig extends StepConfig{
+public class HtmlScriptAndCssConfig{
 	public String input;
 	public String output;
 	public boolean compareBytes = true; 

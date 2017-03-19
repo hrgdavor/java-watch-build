@@ -1,11 +1,11 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,23 +16,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.config.GzipConfig;
 
-public class CopyTaskFactory extends AbstractTaskFactory{
+public class GzipTaskFactory extends AbstractTaskFactory{
 
-	Logger log = LoggerFactory.getLogger(CopyTaskFactory.class);
-		
-	public CopyTaskFactory(Main core, ObjectMapper mapper){
+	Logger log = LoggerFactory.getLogger(GzipTaskFactory.class);
+	
+	public GzipTaskFactory(Main core, ObjectMapper mapper){
 		super(core, mapper);
 	}
 	
 	@Override
 	public void startOne(String inlineParam, JsonNode root, boolean watch) {
-		CopyConfig config = mapper.convertValue(root, CopyConfig.class);
-		
+		GzipConfig config = mapper.convertValue(root, GzipConfig.class);
+
 		Task task = new Task(config);
 		task.start(watch);
 		if(watch)
-			core.addThread(new Thread(task,"Copy:"+config.input+" to "+config.output));
+			core.addThread(new Thread(task,"Gzip:"+config.input+" to "+config.output));
 
 	}
 	
@@ -40,23 +42,21 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 
 		private GlobWatcher fromGlob;
 		protected Path toPath;
-		private CopyConfig config;
+		private GzipConfig config;
 
 
-		public Task(CopyConfig config) {
+		public Task(GzipConfig config) {
 			this.config = config;
+			if(config.output == null) config.output = config.input;
+
 			File f = new File(config.input);
-			int i=0;
-			while(!f.exists() && i<config.altFolder.size()){
-				f = new File(config.altFolder.get(i));
-				i++;
-			}
-			if(!f.exists()) throw new RuntimeException("Folder and alternatives do not exist "+config.input+" "+f.getAbsolutePath());
+			if(!f.exists()) throw new RuntimeException("Folder does not exist "+config.input);
 			
 			fromGlob = new GlobWatcher(f.getAbsoluteFile().toPath());
 			
 			fromGlob.includes(config.include);
 			fromGlob.excludes(config.exclude);
+			
 			toPath = core.getOutputRoot().resolve(config.output);
 		}
 		
@@ -64,8 +64,8 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 			this.fromGlob.init(watch);
 			Collection<Path> files = fromGlob.getMatchedFiles();
 			for (Path file : files) {
-				Path toFile = toPath.resolve(fromGlob.relativize(file));
-				copyFile(file, toFile);
+				Path toFile = toPath.resolve(fromGlob.relativize(file)).resolveSibling(file.getFileName()+".gz");
+				compressFile(file, toFile);
 			}
 		}
 	
@@ -82,36 +82,31 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 					log.info("changed:"+entry+" "+path.toFile().lastModified());
 					
 					Path toFile = toPath.resolve(fromGlob.relativize(path));
-					copyFile(path, toFile);
+					compressFile(path, toFile);
 				}
 			}
 		}
 	
 		
-		protected boolean copyFile(Path from, Path to){
+		protected boolean compressFile(Path from, Path to){
 			File fromFile = from.toFile();
 			File toFile = to.toFile();
 			boolean shouldCopy = !toFile.exists() || fromFile.lastModified() > toFile.lastModified();
 	
-			byte[] newBytes = null;;
-	
 			if(shouldCopy){
-				try {
-					newBytes = Files.readAllBytes(from);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-					return false; // something was wrong while reading
-				}			
-			}
-	
-			if(shouldCopy && TaskUtils.writeFile(to, newBytes, config.compareBytes)){			
-				log.info("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
+				try {				
+					GZIPOutputStream gzo = new GZIPOutputStream(new FileOutputStream(toFile));
+					Files.copy(from, gzo);
+					gzo.close();
+				} catch (Exception e) {
+					log.error("ERROR generating gzip ",e);
+				}
+				log.info("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());		
 				return true;
 			}else{
-				log.trace("skip identical: "+to);		
+				log.trace("skip already generated: "+to);		
 				return false;
 			}
 		}
 	}
-
 }

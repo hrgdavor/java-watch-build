@@ -1,9 +1,13 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.config.ConfigException;
 
 public abstract class AbstractTaskFactory implements TaskFactory {
 	

@@ -1,7 +1,6 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
-import hr.hrg.watch.build.Main.ConfDef;
-import hr.hrg.watch.build.Main.TaskOption;;
+import hr.hrg.watch.build.Main;;
 
 public class ConfigException extends RuntimeException {
 	

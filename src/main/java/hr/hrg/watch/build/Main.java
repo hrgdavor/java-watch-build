@@ -19,6 +19,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import hr.hrg.watch.build.config.ConfigException;
+import hr.hrg.watch.build.config.TaskDef;
+import hr.hrg.watch.build.config.TaskOption;
+import hr.hrg.watch.build.option.LinesOptionParser;
+import hr.hrg.watch.build.option.OptionParser;
+import hr.hrg.watch.build.option.YamlOptionParser;
+import hr.hrg.watch.build.task.CopyTaskFactory;
+import hr.hrg.watch.build.task.GzipTaskFactory;
+import hr.hrg.watch.build.task.HtmlScriptAndCssTaskFactory;
+import hr.hrg.watch.build.task.ImportTaskFactory;
+import hr.hrg.watch.build.task.JsBundlesTaskFactory;
+import hr.hrg.watch.build.task.JsCompTaskFactory;
+import hr.hrg.watch.build.task.LangTaskFactory;
+import hr.hrg.watch.build.task.SassTaskFactory;
+import hr.hrg.watch.build.task.TaskFactory;
+import hr.hrg.watch.build.task.VarTaskFactory;
+
 public class Main {
 
 	protected ObjectMapper mapper   = new ObjectMapper();
@@ -84,7 +101,7 @@ public class Main {
 		addRunner("gzip", new GzipTaskFactory(this,mapper));
 		addRunner("language", new LangTaskFactory(this,mapper, yamlMapper));
 		addRunner("jscomp", new JsCompTaskFactory(this,mapper));
-		addRunner("HtmlScriptAndCss", new HtmlScriptAndCssRunner(this,mapper));
+		addRunner("HtmlScriptAndCss", new HtmlScriptAndCssTaskFactory(this,mapper));
 	}
 	
 	public void addRunner(String code, TaskFactory runner){
@@ -288,35 +305,6 @@ public class Main {
 
 	public VarMap getVars() {
 		return vars;
-	}
-
-	static class ConfDef{
-		public Path confFile;
-		public int lineNumber;		
-		public String type;
-		public String params;
-	}
-
-	static class TaskDef extends ConfDef{
-		public List<TaskOption> options = new ArrayList<>();
-		
-		public TaskDef(Path confFile,int lineNumber, String ...params) {
-			this.confFile = confFile;
-			this.lineNumber = lineNumber;
-			type = params[0].toLowerCase();
-			this.params = params[1];
-		}
-	}
-	
-	static class TaskOption extends ConfDef{
-		public List<String> lines = new ArrayList<>();
-
-		public TaskOption(Path confFile, int lineNumber, String ...params) {
-			this.confFile = confFile;
-			this.lineNumber = lineNumber;
-			if(params.length >0) type = params[0].toLowerCase();
-			if(params.length >1) this.params = params[1];
-		}
 	}
 
 	public static void printHelp(){

@@ -1,9 +1,13 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-class JsCompTaskFactory extends AbstractTaskFactory{
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.config.ConfigException;
+import hr.hrg.watch.build.config.JsCompConfig;
+
+public class JsCompTaskFactory extends AbstractTaskFactory{
 	
 	public JsCompTaskFactory(Main core, ObjectMapper mapper){
 		super(core, mapper);

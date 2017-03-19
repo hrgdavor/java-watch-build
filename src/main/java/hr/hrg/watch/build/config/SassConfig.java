@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import wrm.libsass.SassCompiler.InputSyntax;
 import wrm.libsass.SassCompiler.OutputStyle;
 
-class SassConfig extends StepConfig{
+public class SassConfig {
 	public String input;
 	public String output;
 	public List<String> include = new ArrayList<>();

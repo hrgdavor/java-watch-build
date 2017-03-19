@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -19,7 +19,11 @@ import org.slf4j.LoggerFactory;
 import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
-import hr.hrg.watch.build.LangTask.Update;
+import hr.hrg.watch.build.LanguageChangeListener;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.VarExpander;
+import hr.hrg.watch.build.config.JsCompConfig;
+import hr.hrg.watch.build.task.LangTask.Update;
 
 public class JsCompTask implements LanguageChangeListener, Runnable{
 

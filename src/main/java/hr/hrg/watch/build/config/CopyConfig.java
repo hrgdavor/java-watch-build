@@ -1,9 +1,9 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class CopyConfig{
+public class CopyConfig{
 	public String input;
 	public List<String> altFolder = new ArrayList<>();
 	public String output;

@@ -1,6 +1,6 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.option;
 
-import hr.hrg.watch.build.Main.TaskOption;
+import hr.hrg.watch.build.config.TaskOption;
 
 public class LinesOptionParser implements OptionParser{
 

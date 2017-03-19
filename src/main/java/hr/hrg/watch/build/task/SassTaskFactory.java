@@ -1,8 +1,10 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.config.SassConfig;
 import hr.hrg.watchsass.Compiler;
 import hr.hrg.watchsass.CompilerOptions;
 

@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.option;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PipedInputStream;
@@ -8,7 +8,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import hr.hrg.watch.build.Main.TaskOption;
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.VarMap;
+import hr.hrg.watch.build.config.TaskOption;
 
 public class YamlOptionParser implements OptionParser{
 

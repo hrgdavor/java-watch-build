@@ -1,4 +1,4 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -28,6 +28,9 @@ import com.google.javascript.jscomp.SourceFile;
 import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.config.JsBundlesConfig;
 
 public class JsBundlesTaskFactory extends AbstractTaskFactory {
 

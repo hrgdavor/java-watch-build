@@ -1,7 +1,12 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import java.nio.file.Paths;
 import java.util.List;
+
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.VarMap;
+import hr.hrg.watch.build.option.OptionException;
 
 public class ImportTaskFactory implements TaskFactory{
 	

@@ -1,10 +1,13 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-class LangTaskFactory extends AbstractTaskFactory{
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.config.LangConfig;
+
+public class LangTaskFactory extends AbstractTaskFactory{
 	
 	private YAMLMapper yamlMapper;
 

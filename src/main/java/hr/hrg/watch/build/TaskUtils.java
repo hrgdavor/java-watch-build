@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import hr.hrg.watch.build.option.OptionException;
+
 public class TaskUtils {
 	public static final int BUFFER_SIZE = 4096;
 
@@ -107,7 +109,7 @@ public class TaskUtils {
 		return dest == null || "".equals(dest) || dest.startsWith("/dev/null");
 	}
 
-	protected static boolean emptyOrcomment(String trimmed) {
+	public static boolean emptyOrcomment(String trimmed) {
 		return trimmed.isEmpty() || trimmed.charAt(0) == '#';
 	}
 

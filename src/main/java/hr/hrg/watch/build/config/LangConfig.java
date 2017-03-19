@@ -1,9 +1,9 @@
-package hr.hrg.watch.build;
+package hr.hrg.watch.build.config;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class LangConfig extends StepConfig{
+public class LangConfig{
 	public String input;
 	public String varName = "TRANS";
 	public boolean compareBytes = true;
