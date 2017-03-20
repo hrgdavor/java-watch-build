@@ -1,3 +1,4 @@
+Java watch build Java watcher [![Maven Central](https://img.shields.io/maven-central/v/hr.hrg/java-watch-build.svg)](https://mvnrepository.com/artifact/hr.hrg/java-watch-build)
 
 #Introduction
 Command line utility for building projects
