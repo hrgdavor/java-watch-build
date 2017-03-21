@@ -52,11 +52,18 @@ public class Main {
 		}
 
 	}
-	private static WatchBuild make() {
+
+	public static WatchBuild make() {
 		YAMLMapper yamlMapper = new YAMLMapper();
 		JsonMapper mapper = new JsonMapper();
-		
 		WatchBuild watchBuild = new WatchBuild();
+		
+		addDefaults(yamlMapper, mapper, watchBuild);
+
+		return watchBuild;
+	}
+
+	private static void addDefaults(YAMLMapper yamlMapper, JsonMapper mapper, WatchBuild watchBuild) {
 		HashMap<String, OptionParser> parsers = new HashMap<>();
 		HashMap<String, TaskFactory> factories = new HashMap<>();
 
@@ -77,8 +84,6 @@ public class Main {
 		
 		watchBuild.setFactories(factories);
 		watchBuild.setParsers(parsers);
-
-		return watchBuild;
 	}	
 	
 	public static void printHelp(){
