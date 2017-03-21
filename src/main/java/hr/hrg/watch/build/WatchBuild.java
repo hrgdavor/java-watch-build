@@ -101,6 +101,9 @@ public class WatchBuild {
 		return burstDelay;
 	}
 	
+	public void setBurstDelay(long burstDelay) {
+		this.burstDelay = burstDelay;
+	}
 	
 	protected void runFromArgs(String[] args) {
 		watch = false;
@@ -316,7 +319,7 @@ public class WatchBuild {
 					}
 					taskFactory.start(task.params, options, watch);
 					if(taskFactory instanceof VarTaskFactory) {
-						updateLang();
+						afterVars();
 					}
 				}
 			}
@@ -329,13 +332,18 @@ public class WatchBuild {
 		}
 	}
 	
-	private void updateLang(){
+	private void afterVars(){
 		lang = vars.get("lang");
 		if(lang == null ) lang = "";
 		langs = new String[]{lang};
 		if(lang.indexOf(',') != -1) {
 			langs = lang.split(",");
 			lang = langs[0];
+		}
+		try {
+			if(vars.containsKey("burstDelay")) burstDelay = Long.parseLong(vars.get("burstDelay"));			
+		} catch (Exception e) {
+			log.error("Invalid value for burstDelay: "+vars.get("burstDelay"));
 		}
 	}
 

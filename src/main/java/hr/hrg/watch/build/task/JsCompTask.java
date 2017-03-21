@@ -39,7 +39,8 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 	private GlobWatcher watcher;
 	private JsCompConfig config;
 	
-	public JsCompTask(Path outputRoot, JsCompConfig config, LangTask langTask){
+	public JsCompTask(Path outputRoot, JsCompConfig config, LangTask langTask, long burstDelay){
+		this.burstDelay = burstDelay;
 		this.config = config;
 		this.langTask = langTask;
 

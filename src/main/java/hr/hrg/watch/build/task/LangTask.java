@@ -82,7 +82,7 @@ public class LangTask implements Runnable{
 	public void run(){
 		try {			
 			while(!Thread.interrupted()){
-				Collection<Path> changes = folderWatcher.takeOrNullFiles();
+				Collection<Path> changes = folderWatcher.takeBatchFilesUnique(core.getBurstDelay());
 				if(changes == null) break; // null means interrupted, and we should end this loop
 				
 				for (Path changeEntry : changes) {

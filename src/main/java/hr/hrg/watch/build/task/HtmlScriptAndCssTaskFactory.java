@@ -206,7 +206,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				public void run() {
 					try {
 						while(!Thread.interrupted()){
-							Collection<Path> changes = scriptsToWatch.takeBatchFiles(config.burstDelay);
+							Collection<Path> changes = scriptsToWatch.takeBatchFiles(core.getBurstDelay());
 							if(changes == null) break; // null means interrupted, and we should end this loop
 							
 							
@@ -225,7 +225,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			
 			try {
 				while(!Thread.interrupted()){
-					Collection<Path> changes = watcher.takeBatchFiles(config.burstDelay);
+					Collection<Path> changes = watcher.takeBatchFiles(core.getBurstDelay());
 					if(changes == null) break; // null means interrupted, and we should end this loop
 					
 					HashSet<Path> todo = new HashSet<>(changes);

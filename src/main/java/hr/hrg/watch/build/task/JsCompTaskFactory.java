@@ -1,7 +1,6 @@
 package hr.hrg.watch.build.task;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -26,7 +25,8 @@ public class JsCompTaskFactory extends AbstractTaskFactory{
 			throw new ConfigException("language task for "+inlineParam+" not found. You must start a task for "+inlineParam+" first",null);
 		}
 		
-		JsCompTask task = new JsCompTask(core.getOutputRoot(), config, langTask);
+		JsCompTask task = new JsCompTask(core.getOutputRoot(), config, langTask, core.getBurstDelay());
+		
 		task.start(watch);
 		if(watch)
 			core.addThread(new Thread(task,"JsComp:"+config.input+" to "+config.output));

@@ -34,6 +34,7 @@ public class SassTaskFactory extends AbstractTaskFactory {
 		options.inputSyntax    = config.inputSyntax;
 		options.omitSourceMapingURL    = config.omitSourceMapingURL;
 		options.precision    = config.precision;
+		options.burstDelay    = core.getBurstDelay();
 		
 		Compiler compiler = new Compiler(options);
 

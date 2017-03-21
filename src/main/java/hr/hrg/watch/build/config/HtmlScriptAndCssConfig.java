@@ -11,6 +11,5 @@ public class HtmlScriptAndCssConfig{
 	public String cssReplace = "<!--CSS-FILES-->";
 	public List<String> scripts = new ArrayList<>(); 
 	public List<String> css = new ArrayList<>();
-	public long burstDelay = 50;
 
 }
