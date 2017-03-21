@@ -15,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
@@ -27,6 +30,8 @@ import hr.hrg.watch.build.task.VarTaskFactory;
 
 public class WatchBuild {
 
+	Logger log = LoggerFactory.getLogger(WatchBuild.class);
+	
 	protected JsonMapper mapper   = new JsonMapper();
 	protected YAMLMapper yamlMapper = new YAMLMapper();
 
@@ -178,9 +183,10 @@ public class WatchBuild {
 				thread.start();
 			}
 			
+		} catch (ConfigException e) {
+			log.error(e.getMessage());
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			log.error(e.getMessage(),e);;
 		}
 	}
 
@@ -268,8 +274,7 @@ public class WatchBuild {
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
-			System.out.println("Errro loading "+confFile.toAbsolutePath()+" "+e.getMessage());
-			throw new RuntimeException(e.getMessage(),e);
+			throw new ConfigException(e.getMessage(),e);
 		}
 	}
 

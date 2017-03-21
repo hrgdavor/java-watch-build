@@ -28,6 +28,11 @@ public class Main {
 	public static void main(String[] args) {
 		if(args.length == 0) printHelp();
 		
+		setDefaultProperty("org.slf4j.simpleLogger.logFile", "System.out");
+		setDefaultProperty("org.slf4j.simpleLogger.cacheOutputStream", "true");
+		setDefaultProperty("org.slf4j.simpleLogger.showDateTime", "true");
+		setDefaultProperty("org.slf4j.simpleLogger.dateTimeFormat", "yyyy.MM.dd HH:mm:ss.SSS");
+		
 		if(args[0].endsWith(".js")){
 			ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 			String script = "var hrhrgwatchbuildMain = Java.type('hr.hrg.watch.build.WatchBuild');" 
@@ -85,6 +90,11 @@ public class Main {
 		watchBuild.setFactories(factories);
 		watchBuild.setParsers(parsers);
 	}	
+	
+	public static final void setDefaultProperty(String key, String value){
+		if(System.getProperty(key) == null)
+			System.setProperty(key,value);		
+	}
 	
 	public static void printHelp(){
 		System.out.println("Usage: conf|script ");
