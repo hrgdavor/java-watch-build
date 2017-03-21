@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
 import hr.hrg.watch.build.WatchBuild;
+import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.TaskOption;
 
 public class YamlOptionParser implements OptionParser{
@@ -32,15 +33,21 @@ public class YamlOptionParser implements OptionParser{
 			byte[] nl = System.lineSeparator().getBytes();
 			ByteArrayOutputStream bo = new ByteArrayOutputStream();
 			
+			// TRICK: add empty lines to mimic proper line numbers if yaml parsing error occurs :D
+			for(int i=0; i<option.lineNumber; i++) {
+				bo.write(nl);				
+			}
+			
 			for(String line: option.lines) {
 				bo.write(line.getBytes());
 				bo.write(nl);
 			}
+			
 			JsonNode node = yamlMapper.readTree(bo.toByteArray());
 			if(perLanguage) return multiply(node);
 			return TaskUtils.expandVars(node, core.getVars());
 		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage(),e);
+			throw new ConfigException(option, e.getMessage(), e);
 		}
 	}
 

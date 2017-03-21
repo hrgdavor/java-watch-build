@@ -11,7 +11,7 @@ public class ConfigException extends RuntimeException {
 	}
 
 	public ConfigException(ConfDef def, String message, Throwable cause){
-		super(def.confFile.toAbsolutePath()+":"+def.lineNumber+(def instanceof  TaskOption? "@@":"@")+def.type+" "+message, cause);
+		super(def.confFile.toAbsolutePath()+":"+def.lineNumber+" "+(def instanceof  TaskOption? "@@":"@")+def.type+" "+message, cause);
 		withConfigInfo = true;
 	}
 	
