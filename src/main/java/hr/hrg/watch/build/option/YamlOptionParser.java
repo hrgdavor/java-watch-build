@@ -1,25 +1,26 @@
 package hr.hrg.watch.build.option;
 
 import java.io.ByteArrayOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+
+import javax.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.TaskOption;
 
 public class YamlOptionParser implements OptionParser{
 
 	private YAMLMapper yamlMapper;
 	private boolean perLanguage;
-	private Main core;
+	private WatchBuild core;
 
-	public YamlOptionParser(Main core, YAMLMapper yamlMapper, boolean perLanguage) {
+	@Inject
+	public YamlOptionParser(WatchBuild core, YAMLMapper yamlMapper, boolean perLanguage) {
 		this.core = core;
 		this.yamlMapper = yamlMapper;
 		this.perLanguage = perLanguage;

@@ -5,16 +5,16 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.config.ConfigException;
 
 public abstract class AbstractTaskFactory implements TaskFactory {
 	
-	protected Main core;
+	protected WatchBuild core;
 	protected ObjectMapper mapper;
 
-	public AbstractTaskFactory(Main core, ObjectMapper mapper) {
+	public AbstractTaskFactory(WatchBuild core, ObjectMapper mapper) {
 		this.core = core;
 		this.mapper = mapper;
 	}

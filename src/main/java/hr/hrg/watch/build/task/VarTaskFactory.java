@@ -2,7 +2,7 @@ package hr.hrg.watch.build.task;
 
 import java.util.List;
 
-import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
 import hr.hrg.watch.build.option.OptionException;
@@ -10,9 +10,9 @@ import hr.hrg.watch.build.option.OptionException;
 public class VarTaskFactory implements TaskFactory{
 
 	boolean override;
-	private Main core;
+	private WatchBuild core;
 	
-	public VarTaskFactory(Main core, boolean override) {
+	public VarTaskFactory(WatchBuild core, boolean override) {
 		this.core = core;
 		this.override = override;
 	}

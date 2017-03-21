@@ -1,16 +1,20 @@
 package hr.hrg.watch.build.task;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-import hr.hrg.watch.build.Main;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.SassConfig;
 import hr.hrg.watchsass.Compiler;
 import hr.hrg.watchsass.CompilerOptions;
 
 public class SassTaskFactory extends AbstractTaskFactory {
 
-	public SassTaskFactory(Main core, ObjectMapper mapper){
+	@Inject
+	public SassTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}
 	

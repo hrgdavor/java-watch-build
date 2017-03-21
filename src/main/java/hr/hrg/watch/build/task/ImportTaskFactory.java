@@ -3,16 +3,20 @@ package hr.hrg.watch.build.task;
 import java.nio.file.Paths;
 import java.util.List;
 
-import hr.hrg.watch.build.Main;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
 import hr.hrg.watch.build.option.OptionException;
 
 public class ImportTaskFactory implements TaskFactory{
 	
-	private Main core;
+	private WatchBuild core;
 
-	public ImportTaskFactory(Main core){
+	@Inject
+	public ImportTaskFactory(WatchBuild core){
 		this.core = core;
 	}
 	

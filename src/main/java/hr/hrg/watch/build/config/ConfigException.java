@@ -1,6 +1,6 @@
 package hr.hrg.watch.build.config;
 
-import hr.hrg.watch.build.Main;;
+import hr.hrg.watch.build.WatchBuild;;
 
 public class ConfigException extends RuntimeException {
 	

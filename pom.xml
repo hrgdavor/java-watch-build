@@ -22,26 +22,26 @@
 			<artifactId>java-watch-sass</artifactId>
 			<version>0.3.0-SNAPSHOT</version>
 		</dependency>
-		<dependency>
+		<!-- dependency>
 			<groupId>hr.hrg</groupId>
 			<artifactId>java-watch-copy</artifactId>
 			<version>0.3.0-SNAPSHOT</version>
-		</dependency>
+		</dependency -->
 		<dependency>
 			<groupId>hr.hrg</groupId>
 			<artifactId>java-watcher</artifactId>
 			<version>0.3.0-SNAPSHOT</version>
 		</dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson-version}</version>
-        </dependency>
 		<dependency>
-		  <groupId>com.fasterxml.jackson.dataformat</groupId>
-		  <artifactId>jackson-dataformat-yaml</artifactId>
-		  <version>${jackson-version}</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+			<version>${jackson-version}</version>
 		</dependency>
 
 		<dependency>
@@ -56,7 +56,14 @@
 			<version>1.7.21</version>
 			<optional>true</optional>
 		</dependency>
-	
+
+		<dependency>
+		    <groupId>javax.inject</groupId>
+		    <artifactId>javax.inject</artifactId>
+		    <version>1</version>
+			<optional>true</optional>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 
@@ -92,7 +99,7 @@
 			<id>ossrh</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
-  	</distributionManagement>
+	</distributionManagement>
 	<build>
 		<plugins>
 			<plugin>
@@ -177,7 +184,7 @@
 					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
 					<autoReleaseAfterClose>true</autoReleaseAfterClose>
 				</configuration>
-			</plugin>   
+			</plugin>
 		</plugins>
 	</build>
 
