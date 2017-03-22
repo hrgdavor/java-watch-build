@@ -30,7 +30,7 @@ configuration comes from yaml as JsonNode because jackson is used
 there are 3 different ways the config can come
 1) ObjectNode actual config object to run a task instance {...}
 2) ArrayNode - each element is a config object to run a task instance [{...}...]
-3) ArrayNode - each element is a language specific object {"lang":"xx", "items":[{...}...]} and each item a config object to run a task instance
+3) ArrayNode - each element is a language specific object {"lang":"xx", "items":[{...}...]} and each item is a config object to run a task instance
 
 */			
 		if(root.isArray()){
