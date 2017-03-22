@@ -19,7 +19,7 @@ public class SassTaskFactory extends AbstractTaskFactory {
 	}
 	
 	@Override
-	public void startOne(String inlineParam, JsonNode root, boolean watch) {
+	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
 		SassConfig config = mapper.convertValue(root, SassConfig.class);
 		CompilerOptions options = new CompilerOptions(); 
 		options.pathStrInput  = config.input;

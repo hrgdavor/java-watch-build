@@ -33,7 +33,7 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, JsonNode root, boolean watch) {
+	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
 		CopyConfig config = mapper.convertValue(root, CopyConfig.class);
 		
 		Task task = new Task(config);

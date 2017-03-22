@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.watch.build.TaskUtils;
@@ -58,13 +59,20 @@ public class YamlOptionParser implements OptionParser{
 		VarMap vars = core.getVars();
 		String oldLang = vars.get("lang");
 		for(String lang: langs){
+			
+			ObjectNode langCopy = yamlMapper.createObjectNode();
+			arr.add(langCopy);
+			langCopy.put("lang", lang);
+			ArrayNode items = yamlMapper.createArrayNode();
+			langCopy.set("items", items);
+			
 			vars.put("lang", lang);
 			JsonNode copy = TaskUtils.expandVars(TaskUtils.copy(yamlMapper, node), vars);
 			//if first level is array flatten that first level
 			if(copy.isArray()){
-				for(JsonNode tmp:copy) arr.add(tmp);
+				for(JsonNode tmp:copy) items.add(tmp);
 			}else {				
-				arr.add(copy);
+				items.add(copy);
 			}
 		}
 		vars.put("lang", oldLang);

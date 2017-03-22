@@ -17,12 +17,12 @@ public class JsCompTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, JsonNode root, boolean watch) {
+	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
 		JsCompConfig config = mapper.convertValue(root, JsCompConfig.class);
-
-		LangTask langTask = (LangTask) core.getTask(inlineParam);
+		
+		LangTask langTask = (LangTask) core.getTask(lang);
 		if(langTask == null) {
-			throw new ConfigException("language task for "+inlineParam+" not found. You must start a task for "+inlineParam+" first",null);
+			throw new ConfigException("language task for "+lang+" not found. You must start a task for "+lang+" first",null);
 		}
 		
 		JsCompTask task = new JsCompTask(core.getOutputRoot(), config, langTask, core.getBurstDelay());

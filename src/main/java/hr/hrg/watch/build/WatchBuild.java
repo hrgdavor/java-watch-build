@@ -187,7 +187,7 @@ public class WatchBuild {
 			}
 			
 		} catch (ConfigException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);;
 		}

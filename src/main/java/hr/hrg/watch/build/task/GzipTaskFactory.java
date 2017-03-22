@@ -32,7 +32,7 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, JsonNode root, boolean watch) {
+	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
 		GzipConfig config = mapper.convertValue(root, GzipConfig.class);
 
 		Task task = new Task(config);

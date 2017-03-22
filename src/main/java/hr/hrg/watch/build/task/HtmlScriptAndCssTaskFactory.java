@@ -34,7 +34,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, JsonNode root, boolean watch) {
+	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
 		HtmlScriptAndCssConfig config = mapper.convertValue(root, HtmlScriptAndCssConfig.class);
 
 		Task task = new Task(config, core.getOutputRoot());

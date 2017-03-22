@@ -47,7 +47,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	}
 	
 	@Override
-	public void startOne(String inlineParam, JsonNode root, boolean watch){
+	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch){
 		JsBundlesConfig config = mapper.convertValue(root, JsBundlesConfig.class);
 		
 		Task task = new Task(config);

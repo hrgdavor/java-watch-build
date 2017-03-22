@@ -49,14 +49,12 @@ public class LangTask implements Runnable{
 	private WatchBuild core;
 
 
-	public LangTask(LangConfig config, String lang, WatchBuild core, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
+	public LangTask(LangConfig config, WatchBuild core, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
 		this.config = config;
 		this.core = core;
 		this.root = root;
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
-		
-		core.registerTask(lang, this);
 		
 		File f = new File(config.input);
 		if(!f.exists()) throw new RuntimeException("Input file does not exist "+config.input+" "+f.getAbsolutePath());
