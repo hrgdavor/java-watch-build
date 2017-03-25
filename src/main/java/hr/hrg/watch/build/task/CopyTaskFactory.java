@@ -7,13 +7,11 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;

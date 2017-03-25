@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+  <!-- appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender" -->
+  <appender name="STDOUT" class="hr.hrg.watch.build.WsAndConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
       <pattern>%d{HH:mm:ss.SSS}\t%-5level\t%msg\t[%thread]\t%logger{36}%n </pattern>
     </encoder>
   </appender>
-
+  
+  <logger name="hr.hrg.javawatcher" level="info"/>
+  
   <root level="trace">
     <appender-ref ref="STDOUT" />
   </root>

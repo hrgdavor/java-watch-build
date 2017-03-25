@@ -3,12 +3,28 @@ package hr.hrg.watch.build;
 import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.LoggerContextListener;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.Context;
+import ch.qos.logback.core.LogbackException;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.FilterReply;
+import ch.qos.logback.core.status.Status;
 import hr.hrg.watch.build.option.LinesOptionParser;
 import hr.hrg.watch.build.option.OptionParser;
 import hr.hrg.watch.build.option.YamlOptionParser;
@@ -20,6 +36,7 @@ import hr.hrg.watch.build.task.JsBundlesTaskFactory;
 import hr.hrg.watch.build.task.JsCompTaskFactory;
 import hr.hrg.watch.build.task.LangTaskFactory;
 import hr.hrg.watch.build.task.SassTaskFactory;
+import hr.hrg.watch.build.task.ScriptTaskFactory;
 import hr.hrg.watch.build.task.TaskFactory;
 import hr.hrg.watch.build.task.VarTaskFactory;
 
@@ -28,10 +45,29 @@ public class Main {
 	public static void main(String[] args) {
 		if(args.length == 0) printHelp();
 		
-		setDefaultProperty("org.slf4j.simpleLogger.logFile", "System.out");
-		setDefaultProperty("org.slf4j.simpleLogger.cacheOutputStream", "true");
-		setDefaultProperty("org.slf4j.simpleLogger.showDateTime", "true");
-		setDefaultProperty("org.slf4j.simpleLogger.dateTimeFormat", "yyyy.MM.dd HH:mm:ss.SSS");
+//		ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+//		if(loggerFactory instanceof LoggerContext) {
+//			LoggerContext context = (LoggerContext) loggerFactory;
+//			Logger logger = context.getLogger(Logger.ROOT_LOGGER_NAME);
+//			
+//			AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>() {
+//				@Override
+//				protected void append(ILoggingEvent eventObject) {
+//					System.err.println(eventObject);
+//				}
+//			};
+//			appender.setContext(context);
+//			appender.setName("ws-log");
+//			logger.setLevel(Level.DEBUG);
+//			logger.addAppender(appender);
+//			System.err.println("ROOT "+logger);
+//		}
+		
+		
+//		setDefaultProperty("org.slf4j.simpleLogger.logFile", "System.out");
+//		setDefaultProperty("org.slf4j.simpleLogger.cacheOutputStream", "true");
+//		setDefaultProperty("org.slf4j.simpleLogger.showDateTime", "true");
+//		setDefaultProperty("org.slf4j.simpleLogger.dateTimeFormat", "yyyy.MM.dd HH:mm:ss.SSS");
 		
 		if(args[0].endsWith(".js")){
 			ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
@@ -78,6 +114,7 @@ public class Main {
 
 		factories.put("var", new VarTaskFactory(watchBuild,true));
 		factories.put("defvar", new VarTaskFactory(watchBuild,false));
+		factories.put("script", new ScriptTaskFactory(watchBuild,mapper));
 		factories.put("import", new ImportTaskFactory(watchBuild));
 		factories.put("jsbundles", new JsBundlesTaskFactory(watchBuild,mapper));
 		factories.put("sass", new SassTaskFactory(watchBuild,mapper));

@@ -1,0 +1,12 @@
+@ var
+  lang: en
+
+@ script node
+  input: src
+  initSendAll: false
+  params: 
+    - src/test/js/testNode.js
+
+@ script http://localhost/test/example.php
+  input: src
+  initSendAll: true

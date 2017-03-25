@@ -117,6 +117,10 @@ public class WatchBuild {
 		runBuild(args[0]);
 		if(!watch) return;
 		
+		System.out.println();
+		System.out.println("type: \"r\" and press <ENTER> to reload the script");
+		System.out.println("type: \"q\" and press <ENTER> to quit");
+		
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			String line = null;
@@ -283,7 +287,7 @@ public class WatchBuild {
 
 	protected void finishTaskProcessing(TaskDef task, boolean hasNonEmptyLines) {
 		try {
-			if(dryRun) System.out.println("TASK: "+task.type);
+			if(dryRun) System.out.println("TASK: "+task.type+" config lines: "+task.options.get(0).lines.size());
 			int minIndent = -1;
 			for(TaskOption option: task.options){
 				for(String line: option.lines){
