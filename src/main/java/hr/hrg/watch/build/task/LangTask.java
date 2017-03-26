@@ -25,8 +25,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.LanguageChangeListener;
-import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.LangConfig;
 
 public class LangTask implements Runnable{
@@ -45,7 +45,8 @@ public class LangTask implements Runnable{
 	private YAMLMapper yamlMapper;
 
 	private LangConfig config;
-
+	private List<Path> langFiles = new ArrayList<>();
+	
 	private WatchBuild core;
 
 
@@ -56,11 +57,14 @@ public class LangTask implements Runnable{
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
 		
-		File f = new File(config.input);
-		if(!f.exists()) throw new RuntimeException("Input file does not exist "+config.input+" "+f.getAbsolutePath());
-
-		folderWatcher = new GlobWatcher(f.getParentFile().getAbsoluteFile().toPath(), false);
-		folderWatcher.includes(f.getName());
+		folderWatcher = new GlobWatcher(root, false);
+		for(String fileName: config.input) {
+			Path path = root.resolve(fileName);
+			File f = path.toFile();
+			if(!f.exists()) throw new RuntimeException("Input file does not exist "+config.input+" "+f.getAbsolutePath());
+			langFiles.add(path);
+			folderWatcher.includes(fileName);
+		}
 	}
 
 	public void start(boolean watch){
@@ -94,7 +98,7 @@ public class LangTask implements Runnable{
 	}
 
 	protected boolean genFiles(Path from){
-		Update update = this.updateLanguage(from);
+		Update update = this.updateLanguage();
 		
 		if(update.changes.size() == 0 && update.removed.size() == 0){
 			log.trace("No translations changed");
@@ -117,20 +121,28 @@ public class LangTask implements Runnable{
 		return true;
 	}
 
-	private Update updateLanguage(Path from) {
+	private Update updateLanguage() {
 		Map<String, String> changes = new HashMap<>();
 		Map<String, String> removed = new HashMap<>();
 		Map<String, String> newTrans = new HashMap<>();
+		long lastModified = 0;
 		
-		String fileName = from.getFileName().toString();
-		if(fileName.endsWith(".properties")){
-			fromProperties(newTrans,from);
-		}else if(fileName.endsWith(".json")){
-			fromJson(newTrans, from);
-		}else if(fileName.endsWith(".yml") || fileName.endsWith(".yaml")){
-			fromYaml(newTrans, from);
-		}else{
-			throw new RuntimeException("File type not supported "+fileName+" "+from);
+		for(Path from:langFiles) {
+			String fileName = from.getFileName().toString();
+			
+			// calc max lastModified
+			long tmp = from.toFile().lastModified();
+			if(tmp > lastModified) lastModified = tmp;
+			
+			if(fileName.endsWith(".properties")){
+				fromProperties(newTrans,from);
+			}else if(fileName.endsWith(".json")){
+				fromJson(newTrans, from);
+			}else if(fileName.endsWith(".yml") || fileName.endsWith(".yaml")){
+				fromYaml(newTrans, from);
+			}else{
+				throw new RuntimeException("File type not supported "+fileName+" "+from);
+			}			
 		}
 		
 		for(Entry<String, String> e:newTrans.entrySet()){
@@ -152,7 +164,7 @@ public class LangTask implements Runnable{
 
 		trans = newTrans;
 		
-		return new Update(newTrans, changes, removed, from, from.toFile().lastModified());
+		return new Update(newTrans, changes, removed, lastModified);
 	}
 
 	private boolean compStr(String a, String b){
@@ -289,14 +301,12 @@ public class LangTask implements Runnable{
 		private Map<String, String> newTrans;
 		private Map<String, String> changes;
 		private Map<String, String> removed;
-		private Path file;
 		private long lastModified;
 
-		public Update(Map<String, String> newTrans, Map<String, String> changes, Map<String, String> removed, Path file, long lastModified) {
+		public Update(Map<String, String> newTrans, Map<String, String> changes, Map<String, String> removed, long lastModified) {
 			this.newTrans = newTrans;
 			this.changes = changes;
 			this.removed = removed;
-			this.file = file;
 			this.lastModified = lastModified;
 		}
 		
@@ -316,9 +326,6 @@ public class LangTask implements Runnable{
 			return removed;
 		}
 
-		public Path getFile() {
-			return file;
-		}
 	}
 
 	public void addLanguageChangeListener(LanguageChangeListener listener) {
