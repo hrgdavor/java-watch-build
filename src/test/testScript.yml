@@ -7,6 +7,6 @@
   params: 
     - src/test/js/testNode.js
 
-@ script http://localhost/test/example.php
+@ script http://localhost/test/example.php?lang=${lang}
   input: src
   initSendAll: true
