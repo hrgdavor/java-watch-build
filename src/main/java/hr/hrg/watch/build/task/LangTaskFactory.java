@@ -36,4 +36,9 @@ public class LangTaskFactory extends AbstractTaskFactory{
 
 	}
 
+	@Override
+	public String getDefaultOptionParser() {
+		return "YamlPerLanguage";
+	}	
+	
 }

@@ -31,5 +31,9 @@ public class JsCompTaskFactory extends AbstractTaskFactory{
 		if(watch)
 			core.addThread(new Thread(task,"JsComp:"+config.input+" to "+config.output));
 	}
-		
+
+	@Override
+	public String getDefaultOptionParser() {
+		return "YamlPerLanguage";
+	}	
 }
