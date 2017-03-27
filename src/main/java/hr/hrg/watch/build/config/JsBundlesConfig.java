@@ -7,7 +7,6 @@ public class JsBundlesConfig{
 	public String name;
 	public boolean compareBytes = true;
 	public String root;
-	public String suffix;
 	public boolean outputJS;
 	public boolean outputText;
 	public String compilationLevel = "SIMPLE";

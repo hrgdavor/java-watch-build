@@ -50,7 +50,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch){
 		JsBundlesConfig config = mapper.convertValue(root, JsBundlesConfig.class);
 		
-		Task task = new Task(config);
+		Task task = new Task(config, lang);
 		task.start(watch);
 		if(watch)
 			core.addThread(new Thread(task,"JsBundle:"+config.name+"-to-"+config.root));
@@ -61,9 +61,11 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		private JsBundlesConfig config;
 		private Path rootPath;
 		GlobWatcher watcher;
+		private String lang;
 
-		Task(JsBundlesConfig config){
+		Task(JsBundlesConfig config, String lang){
 			this.config = config;
+			this.lang = lang;
 			
 		}
 		
@@ -257,17 +259,24 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				writer.write("{\"name\":\""+config.name+"\",\"files\":[");
 				boolean first = true;
 				Path rootPath = watcher.getRootPath();
+				long totalSize = 0;
 				for(PathWithWeight pw:paths){
 					if(!first){
 						writer.write(',');
 					}
 					writer.write("{\"script\":\"");
 					writer.write(rootPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
-					writer.write("\",\"modified\":"+pw.path.toFile().lastModified());
+					writer.write("\"");
+					File file = pw.path.toFile();
+					writer.write(",\"modified\":"+file.lastModified());
+					writer.write(",\"size\":"+file.length());
 					writer.write("}");
+					totalSize += file.length();
 					first = false;
 				}
-				writer.write("]}");
+				writer.write("]");
+				writer.write(",\"size\":"+totalSize);
+				writer.write("}");
 				writer.close();
 	
 				if(TaskUtils.writeFile(rootPath.resolve(output), byteOutput.toByteArray(), config.compareBytes)){
@@ -284,9 +293,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 		private String buildFileName(String ext){
 			StringBuilder sb = new StringBuilder("bundle.").append(config.name);
-			if(config.suffix != null && !"".equals(config.suffix)) {
-				sb.append(".").append(config.suffix);
-			}
+			sb.append(".").append(lang);
 			sb.append(".").append(ext);
 			return sb.toString();
 		}

@@ -271,5 +271,6 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	public static class JsInBundle{
 		public String script;
 		public long modified;
+		public long size;
 	}
 }
