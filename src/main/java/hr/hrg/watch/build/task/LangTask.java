@@ -68,13 +68,8 @@ public class LangTask implements Runnable{
 	}
 
 	public void start(boolean watch){
-		folderWatcher.init(watch);
-
-		Collection<Path> files = folderWatcher.getMatchedFilesUnique();
-		
-		for (Path file : files) {
-			genFiles(file);
-		}
+		folderWatcher.init(watch);		
+		genFiles();
 	}
 
 	public Map<String, String> getTrans() {
@@ -89,7 +84,7 @@ public class LangTask implements Runnable{
 				
 				for (Path changeEntry : changes) {
 					if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.toFile().lastModified());
-					genFiles(changeEntry);
+					genFiles();
 				}
 			}
 		} finally {
@@ -97,7 +92,7 @@ public class LangTask implements Runnable{
 		}
 	}
 
-	protected boolean genFiles(Path from){
+	protected boolean genFiles(){
 		Update update = this.updateLanguage();
 		
 		if(update.changes.size() == 0 && update.removed.size() == 0){
