@@ -29,12 +29,14 @@ import hr.hrg.watch.build.option.LinesOptionParser;
 import hr.hrg.watch.build.option.OptionParser;
 import hr.hrg.watch.build.option.YamlOptionParser;
 import hr.hrg.watch.build.task.CopyTaskFactory;
+import hr.hrg.watch.build.task.EnvTaskFactory;
 import hr.hrg.watch.build.task.GzipTaskFactory;
 import hr.hrg.watch.build.task.HtmlScriptAndCssTaskFactory;
 import hr.hrg.watch.build.task.ImportTaskFactory;
 import hr.hrg.watch.build.task.JsBundlesTaskFactory;
 import hr.hrg.watch.build.task.JsCompTaskFactory;
 import hr.hrg.watch.build.task.LangTaskFactory;
+import hr.hrg.watch.build.task.NoOpTaskFactory;
 import hr.hrg.watch.build.task.SassTaskFactory;
 import hr.hrg.watch.build.task.ScriptTaskFactory;
 import hr.hrg.watch.build.task.TaskFactory;
@@ -112,7 +114,9 @@ public class Main {
 		parsers.put("Yaml", new YamlOptionParser(watchBuild,yamlMapper, false));
 		parsers.put("YamlPerLanguage", new YamlOptionParser(watchBuild,yamlMapper, true));
 
+		factories.put("disable", new NoOpTaskFactory());
 		factories.put("var", new VarTaskFactory(watchBuild,true));
+		factories.put("env", new EnvTaskFactory(watchBuild));
 		factories.put("defvar", new VarTaskFactory(watchBuild,false));
 		factories.put("script", new ScriptTaskFactory(watchBuild,mapper));
 		factories.put("import", new ImportTaskFactory(watchBuild));
