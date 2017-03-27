@@ -27,19 +27,19 @@ public class ImportTaskFactory implements TaskFactory{
 
 	@Override
 	public void start( String inlineParam, List<Object> config, boolean watch){
-		
-		if(inlineParam != null && !TaskUtils.emptyOrcomment(inlineParam)) core.loadFile(Paths.get(inlineParam));
+		VarMap vars = core.getVars();
+
+		if(inlineParam != null && !TaskUtils.emptyOrcomment(inlineParam)) core.loadFile(Paths.get(vars.expand(inlineParam)));
 		
 		if(config.get(0) == null) return;
 		List list = TaskUtils.checkOption(config, 0, List.class);
 		if(list.size() == 0) return;		
 		
 		if(!(list.get(0)instanceof String)) throw new OptionException(0,"List of strings expected");
-		VarMap vars = core.getVars();
 		for(Object obj:list){
 			String str = (String) obj;
 			if(TaskUtils.emptyOrcomment(str)) continue;
-			core.loadFile(Paths.get(str));
+			core.loadFile(Paths.get(vars.expand(str)));
 		}
 	}
 	
