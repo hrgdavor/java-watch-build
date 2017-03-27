@@ -86,7 +86,7 @@ public class WatchBuild {
 	}
 	
 	public OptionParser getOptionParser(String code) {
-		return parsers.get(code);
+		return parsers.get(code.toLowerCase());
 	}
 
 	public void addThread(Thread thread){
@@ -141,7 +141,6 @@ public class WatchBuild {
 
 	public boolean stopped(){
 		for(Thread thread: threads){
-			System.out.println("THREAD: "+thread.getName());
 			if(thread.isAlive()) return false;
 		}
 		return true;		
@@ -313,7 +312,7 @@ public class WatchBuild {
 				if(!dryRun || taskFactory.alwaysRun()) {
 					ArrayList<Object> options = new ArrayList<>();
 					for(TaskOption op: task.options) {
-						OptionParser optionParser = parsers.get(op.type);
+						OptionParser optionParser = getOptionParser(op.type);
 						if(optionParser == null) {
 							System.out.println("Please use one of available option parsers: "+getJson(parsers.keySet()));
 							throw new RuntimeException(" OptionParser type: "+op.type+" not found "+op.confFile.toAbsolutePath()+":"+op.lineNumber);
