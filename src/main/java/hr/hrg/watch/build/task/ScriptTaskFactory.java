@@ -1,9 +1,7 @@
 package hr.hrg.watch.build.task;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -14,14 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hr.hrg.javawatcher.FileChangeEntry;
-import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.javawatcher.Main;
 import hr.hrg.watch.build.JsonMapper;
-import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
-import hr.hrg.watch.build.config.CopyConfig;
 import hr.hrg.watch.build.config.ScriptConfig;
 
 public class ScriptTaskFactory extends AbstractTaskFactory{
@@ -37,7 +31,7 @@ public class ScriptTaskFactory extends AbstractTaskFactory{
 	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
 		ScriptConfig config = mapper.convertValue(root, ScriptConfig.class);
 		 
-		Task task = new Task(config, inlineParam);
+		Task task = new Task(config, Paths.get("."), inlineParam);
 		task.start(watch);
 		if(watch)
 			core.addThread(new Thread(task,"Script:"+inlineParam+" watching "+config.initLine));
@@ -51,13 +45,11 @@ public class ScriptTaskFactory extends AbstractTaskFactory{
 		private String command;
 
 
-		public Task(ScriptConfig config, String command) {
+		public Task(ScriptConfig config, Path root,String command) {
 			this.config = config;
 			this.command = command;
-			File f = new File(config.input);
-			if(!f.exists()) throw new RuntimeException("Folder does not exist "+config.input+" "+f.getAbsolutePath());
 			
-			watcher = new GlobWatcher(f.getAbsoluteFile().toPath());
+			watcher = new GlobWatcher(root);
 			
 			watcher.includes(config.include);
 			watcher.excludes(config.exclude);

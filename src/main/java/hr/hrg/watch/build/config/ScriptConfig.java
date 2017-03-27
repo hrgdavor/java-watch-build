@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptConfig{
-	public String input;
 	public String[] params;
 	public List<String> include = new ArrayList<>();
 	public List<String> exclude = new ArrayList<>();
