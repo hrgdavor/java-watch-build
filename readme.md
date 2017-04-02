@@ -13,7 +13,8 @@ The libsass-maven-plugin is an excellent choice if you need to compile SASS as p
 and since recently also has watch option.
 
 If you use gradle then you most likely just need to run it in continuous mode,
-check  thiis blog post [gradle continuous build](https://blog.gradle.org/introducing-continuous-build) for details.
+check  thiis blog post [gradle continuous build](https://blog.gradle.org/introducing-continuous-build) for details 
+or [gradle docs](https://docs.gradle.org/current/userguide/continuous_build.html) 
 
 Latest release is [0.2.0](../../releases/tag/v0.2.0) but you can build the current SNAPSHOT with maven and use that.
 
