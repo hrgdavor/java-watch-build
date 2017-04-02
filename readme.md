@@ -9,10 +9,10 @@ So, I wrote this specifically for myself.
 
 One of the first tools I wanted to have included was a SASS build/watch and after i found
 [libsass-maven-plugin](https://github.com/warmuuh/libsass-maven-plugin) I started to create it.
-The libsass-maven-plugin an excellent choice if you need to compile SASS as part of your maven build, 
+The libsass-maven-plugin is an excellent choice if you need to compile SASS as part of your maven build, 
 and since recently also has watch option.
 
-If you use gradle then you maybe just need to run in in continuous mode,
+If you use gradle then you most likely just need to run it in continuous mode,
 check  thiis blog post [gradle continuous build](https://blog.gradle.org/introducing-continuous-build) for details.
 
 Latest release is [0.2.0](../../releases/tag/v0.2.0) but you can build the current SNAPSHOT with maven and use that.
@@ -22,7 +22,7 @@ Latest release is [0.2.0](../../releases/tag/v0.2.0) but you can build the curre
 [Main.java](src/main/java/hr/hrg/watch/build/Main.java) is for direct command line usage.
 To use it, just download latest ```java-watch-build-0.2.0-shaded.jar``` from [maven central](http://repo1.maven.org/maven2/hr/hrg/java-watch-build/) 
 or [sonatype oss](https://oss.sonatype.org/content/repositories/releases/hr/hrg/java-watch-build/) 
-or build the project with maven and use the shaded jar from target folder.
+or build the project with maven and use the shaded jar from target folder. (I tried gradle few times, and it just does not fit me)
 
 ```
 > java -jar java-watch-build-0.2.0-shaded.jar build.yml 
@@ -34,7 +34,7 @@ Shaded jar includes all the dependencies to the jar is runnable standalone, this
   * full - (~16MB) all tasks
   * mini - (~5MB) excludes parts that are big but you might not need   
     * `@sass` completely 
-    * `@jsbundles` works except javascript compiling  (set `outputJS: false`)
+    * `@jsbundles` works except JavaScript compiling  (set `outputJS: false`)
 
 if you use mini version and define `@sass` task you will get the following error: 
 
