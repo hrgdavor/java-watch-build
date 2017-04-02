@@ -135,7 +135,7 @@ public class WatchBuild {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e.getMessage(),e);
 		}
 	}
 
@@ -191,6 +191,9 @@ public class WatchBuild {
 			
 		} catch (ConfigException e) {
 			log.error(e.getMessage(),e);
+			log.error("Configuration Error ******************************************************************************************************** \n\n"
+					+e.getInfoNl() + "\n"+e.getMessage()+"\n\n");
+			log.error("Configuration Error ******************************************************************************************************** ");
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);;
 		}

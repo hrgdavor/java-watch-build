@@ -18,12 +18,6 @@
 
 	<dependencies>
 
-		<dependency>
-			<groupId>hr.hrg</groupId>
-			<artifactId>java-watch-sass</artifactId>
-			<version>0.3.0-SNAPSHOT</version>
-		</dependency>
-
 		<!-- dependency>
 			<groupId>hr.hrg</groupId>
 			<artifactId>java-watch-copy</artifactId>
@@ -55,11 +49,20 @@
 			<version>${jackson-version}</version>
 		</dependency>
 
-		<!-- closure compiler -->
+		<!-- SASS compiler OPTIONAL -->
+		<dependency>
+			<groupId>hr.hrg</groupId>
+			<artifactId>java-watch-sass</artifactId>
+			<version>0.3.0-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- closure compiler OPTIONAL -->
 		<dependency>
 			<groupId>com.google.javascript</groupId>
 			<artifactId>closure-compiler</artifactId>
 			<version>v20170218</version>
+			<optional>true</optional>
 			<!-- exclude all as it is already shaded -->
 			<exclusions>
 				<exclusion>
@@ -176,6 +179,7 @@
 				<version>2.4.1</version>
 				<executions>
 					<execution>
+						<id>shade-full</id>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
@@ -188,7 +192,36 @@
 								</transformer>
 							</transformers>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>shaded</shadedClassifierName>
+							<shadedClassifierName>full</shadedClassifierName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>shade-mini</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+						<artifactSet>
+							<excludes>
+								<exclude>com.google.javascript</exclude>
+								<exclude>org.eclipse.jetty*</exclude>
+								<exclude>hr.hrg:java-watch-sass</exclude>
+								<exclude>com.github.warmuuh:libsass-maven-plugin</exclude>
+								<exclude>io.bit3:jsass</exclude>
+								<exclude>commons-io:commons-io</exclude>
+								<exclude>org.apache.commons:commons-lang3</exclude>
+								<exclude>javax.servlet:javax.servlet-api</exclude>
+							</excludes>
+						</artifactSet>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>hr.hrg.watch.build.Main</mainClass>
+								</transformer>
+							</transformers>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>mini</shadedClassifierName>
 						</configuration>
 					</execution>
 				</executions>

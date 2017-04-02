@@ -30,9 +30,11 @@ import com.google.javascript.jscomp.SourceFile;
 import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
+import hr.hrg.javawatcher.WatchUtil;
 import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.JsBundlesConfig;
 
 public class JsBundlesTaskFactory extends AbstractTaskFactory {
@@ -182,6 +184,9 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 		private void writeJS(List<PathWithWeight> paths) {
 			if(!config.outputJS) return;
+			if(!WatchUtil.classAvailable("com.google.javascript.jscomp.Compiler")) {
+				throw new ConfigException("JsBundles compiling javascript is not avaiable due to missing dependecy com.google.javascript:closure-compiler (download full shaded version to fix or set outputJS: false in the configuration)",null);
+			}			
 			long start = System.currentTimeMillis();
 	
 			String outputJS = buildFileName("js");
@@ -307,7 +312,6 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 				writer = new PrintWriter(new OutputStreamWriter(byteOutput));
 	
-				writer.println(config.name);
 				Path rootPath = watcher.getRootPath();
 				for(PathWithWeight pw:paths){
 					writer.println(rootPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));

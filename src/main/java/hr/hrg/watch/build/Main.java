@@ -118,15 +118,16 @@ public class Main {
 		factories.put("var", new VarTaskFactory(watchBuild,true));
 		factories.put("env", new EnvTaskFactory(watchBuild));
 		factories.put("defvar", new VarTaskFactory(watchBuild,false));
-		factories.put("script", new ScriptTaskFactory(watchBuild,mapper));
 		factories.put("import", new ImportTaskFactory(watchBuild));
 		factories.put("jsbundles", new JsBundlesTaskFactory(watchBuild,mapper));
-		factories.put("sass", new SassTaskFactory(watchBuild,mapper));
 		factories.put("copy", new CopyTaskFactory(watchBuild,mapper));
 		factories.put("gzip", new GzipTaskFactory(watchBuild,mapper));
 		factories.put("language", new LangTaskFactory(watchBuild,mapper, yamlMapper));
-		factories.put("jscomp", new JsCompTaskFactory(watchBuild,mapper));
 		factories.put("HtmlScriptAndCss", new HtmlScriptAndCssTaskFactory(watchBuild,mapper));
+		factories.put("script", new ScriptTaskFactory(watchBuild,mapper));
+		factories.put("jscomp", new JsCompTaskFactory(watchBuild,mapper));
+		
+		factories.put("sass", new SassTaskFactory(watchBuild,mapper));
 		
 		watchBuild.setFactories(factories);
 		watchBuild.setParsers(parsers);
