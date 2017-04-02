@@ -110,25 +110,36 @@ public class Main {
 		HashMap<String, OptionParser> parsers = new HashMap<>();
 		HashMap<String, TaskFactory> factories = new HashMap<>();
 
+		// configuartion parsing
 		parsers.put("lines", new LinesOptionParser());
 		parsers.put("Yaml", new YamlOptionParser(watchBuild,yamlMapper, false));
 		parsers.put("YamlPerLanguage", new YamlOptionParser(watchBuild,yamlMapper, true));
-
+		
+		// disable tasks by defining a disable task instad of the original
 		factories.put("disable", new NoOpTaskFactory());
+		// import
+		factories.put("import", new ImportTaskFactory(watchBuild));
+		
+		// variable handling
 		factories.put("var", new VarTaskFactory(watchBuild,true));
 		factories.put("env", new EnvTaskFactory(watchBuild));
 		factories.put("defvar", new VarTaskFactory(watchBuild,false));
-		factories.put("import", new ImportTaskFactory(watchBuild));
-		factories.put("jsbundles", new JsBundlesTaskFactory(watchBuild,mapper));
+		
+		// basic
 		factories.put("copy", new CopyTaskFactory(watchBuild,mapper));
 		factories.put("gzip", new GzipTaskFactory(watchBuild,mapper));
-		factories.put("language", new LangTaskFactory(watchBuild,mapper, yamlMapper));
-		factories.put("HtmlScriptAndCss", new HtmlScriptAndCssTaskFactory(watchBuild,mapper));
 		factories.put("script", new ScriptTaskFactory(watchBuild,mapper));
-		factories.put("jscomp", new JsCompTaskFactory(watchBuild,mapper));
 		
+		// advanced tasks (in mini shaded bundle:  sass is not included at all, jsbundles works, but can not compile js)
+		factories.put("jsbundles", new JsBundlesTaskFactory(watchBuild,mapper));
 		factories.put("sass", new SassTaskFactory(watchBuild,mapper));
 		
+		// misc personally used for joining javascript and template into one file
+		factories.put("jscomp", new JsCompTaskFactory(watchBuild,mapper));
+		factories.put("language", new LangTaskFactory(watchBuild,mapper, yamlMapper));
+		factories.put("HtmlScriptAndCss", new HtmlScriptAndCssTaskFactory(watchBuild,mapper));
+		
+
 		watchBuild.setFactories(factories);
 		watchBuild.setParsers(parsers);
 	}	

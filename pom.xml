@@ -205,7 +205,6 @@
 						<artifactSet>
 							<excludes>
 								<exclude>com.google.javascript</exclude>
-								<exclude>org.eclipse.jetty*</exclude>
 								<exclude>hr.hrg:java-watch-sass</exclude>
 								<exclude>com.github.warmuuh:libsass-maven-plugin</exclude>
 								<exclude>io.bit3:jsass</exclude>

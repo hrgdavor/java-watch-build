@@ -22,7 +22,7 @@ public class ConfigException extends RuntimeException {
 	}
 	
 	public String getInfoNl() {
-		return def.confFile.toAbsolutePath()+"\nline:"+def.lineNumber+"\n"+(def instanceof  TaskOption? "@@":"@")+def.type;
+		return def.confFile.toAbsolutePath()+":"+def.lineNumber+"\n"+(def instanceof  TaskOption? "@@":"@")+def.type;
 	}
 	
 	public boolean isWithConfigInfo() {
