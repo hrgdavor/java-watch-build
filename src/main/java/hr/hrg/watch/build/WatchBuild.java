@@ -48,13 +48,18 @@ public class WatchBuild {
 	private boolean dryRun;
 	private Path outputRoot;
 	private long burstDelay = 50;
-	protected VarMap vars = new VarMap();
+	protected VarMap vars;
 	
 	String lang;
 	String[] langs;
 	
 	@Inject
 	public WatchBuild(){
+		vars = new VarMap();
+	}
+
+	public WatchBuild(String varPattern){
+		vars = new VarMap(varPattern);
 	}
 
 	public void setFactories(Map<String, TaskFactory> factories) {

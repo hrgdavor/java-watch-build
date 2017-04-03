@@ -18,11 +18,11 @@
 
 	<dependencies>
 
-		<!-- dependency>
+		<dependency>
 			<groupId>hr.hrg</groupId>
 			<artifactId>java-watch-copy</artifactId>
 			<version>0.3.0-SNAPSHOT</version>
-		</dependency -->
+		</dependency>
 
 		<dependency>
 			<groupId>hr.hrg</groupId>
