@@ -1,11 +1,11 @@
 # Java watch build [![Maven Central](https://img.shields.io/maven-central/v/hr.hrg/java-watch-build.svg)](https://mvnrepository.com/artifact/hr.hrg/java-watch-build)
 
 ## Introduction
-The main goal for this project is to create a utility for building projects 
+The main goal for this project is to create a specific utility for building my own projects 
 that can also be left running to watch for changes and rebuild as soon as possible.
  
-In the sea of options for building your projects, sometimes it is difficult to find one that suits you.
-So, I wrote this specifically for myself. 
+In the sea of options for building your projects, sometimes it is difficult to find one that suits you just right.
+So, I wrote this one specifically for myself. Make sure to check tools with bigger communities before creating your own trying this one :) .  
 
 One of the first tools I wanted to have included was a SASS build/watch and after i found
 [libsass-maven-plugin](https://github.com/warmuuh/libsass-maven-plugin) I started to create it.
