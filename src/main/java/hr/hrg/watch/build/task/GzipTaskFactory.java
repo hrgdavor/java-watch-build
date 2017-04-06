@@ -66,10 +66,13 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 		public void start(boolean watch){
 			this.watcher.init(watch);
 			Collection<Path> files = watcher.getMatchedFiles();
-			for (Path file : files) {
-				Path toFile = toPath.resolve(watcher.relativize(file)).resolveSibling(file.getFileName()+".gz");
-				compressFile(file, toFile);
+			for (Path path : files) {
+				compressFile(path, gzPath(path));
 			}
+		}
+
+		private Path gzPath(Path path) {
+			return toPath.resolve(watcher.relativize(path)).resolveSibling(path.getFileName().toString()+".gz");
 		}
 	
 		public void run(){
@@ -85,8 +88,7 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 						
 						log.info("changed:"+entry+" "+path.toFile().lastModified());
 						
-						Path toFile = toPath.resolve(watcher.relativize(path));
-						compressFile(path, toFile);
+						compressFile(path, gzPath(path));
 					}
 				}
 				
