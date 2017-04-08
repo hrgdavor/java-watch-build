@@ -1,12 +1,9 @@
 package hr.hrg.watch.build.option;
 
-import javax.inject.Inject;
-
 import hr.hrg.watch.build.config.TaskOption;
 
 public class LinesOptionParser implements OptionParser{
 	
-	@Inject
 	public LinesOptionParser() {
 	}
 	
