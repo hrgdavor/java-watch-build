@@ -1,7 +1,5 @@
 package hr.hrg.watch.build.task;
 
-import javax.inject.Inject;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hr.hrg.watch.build.JsonMapper;
@@ -11,7 +9,6 @@ import hr.hrg.watch.build.config.JsCompConfig;
 
 public class JsCompTaskFactory extends AbstractTaskFactory{
 	
-	@Inject
 	public JsCompTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}

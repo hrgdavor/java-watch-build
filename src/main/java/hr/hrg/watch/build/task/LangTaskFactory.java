@@ -1,7 +1,5 @@
 package hr.hrg.watch.build.task;
 
-import javax.inject.Inject;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
@@ -14,7 +12,6 @@ public class LangTaskFactory extends AbstractTaskFactory{
 	
 	private YAMLMapper yamlMapper;
 	
-	@Inject
 	public LangTaskFactory(WatchBuild core, JsonMapper mapper, YAMLMapper yamlMapper){
 		super(core, mapper);
 		this.yamlMapper = yamlMapper;

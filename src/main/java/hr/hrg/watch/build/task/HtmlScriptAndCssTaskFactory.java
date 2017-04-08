@@ -10,9 +10,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,15 +17,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.JsonMapper;
-import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.HtmlScriptAndCssConfig;
 
 public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 
 	Logger log = LoggerFactory.getLogger(HtmlScriptAndCssTaskFactory.class);
 	
-	@Inject
 	public HtmlScriptAndCssTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}

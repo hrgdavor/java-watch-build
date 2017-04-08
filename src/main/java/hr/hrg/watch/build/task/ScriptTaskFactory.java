@@ -5,8 +5,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +20,6 @@ public class ScriptTaskFactory extends AbstractTaskFactory{
 
 	Logger log = LoggerFactory.getLogger(ScriptTaskFactory.class);
 		
-	@Inject
 	public ScriptTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}

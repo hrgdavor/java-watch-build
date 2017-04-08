@@ -25,7 +25,6 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 
 	Logger log = LoggerFactory.getLogger(GzipTaskFactory.class);
 	
-	@Inject
 	public GzipTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}

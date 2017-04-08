@@ -1,8 +1,5 @@
 package hr.hrg.watch.build.task;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hr.hrg.javawatcher.WatchUtil;
@@ -15,7 +12,6 @@ import hr.hrg.watchsass.CompilerOptions;
 
 public class SassTaskFactory extends AbstractTaskFactory {
 
-	@Inject
 	public SassTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}

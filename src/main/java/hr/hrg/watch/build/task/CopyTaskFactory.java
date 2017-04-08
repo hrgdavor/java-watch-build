@@ -25,7 +25,6 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 
 	Logger log = LoggerFactory.getLogger(CopyTaskFactory.class);
 		
-	@Inject
 	public CopyTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}

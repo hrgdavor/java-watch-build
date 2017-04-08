@@ -14,9 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +29,8 @@ import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.javawatcher.WatchUtil;
 import hr.hrg.watch.build.JsonMapper;
-import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.JsBundlesConfig;
 
@@ -43,7 +40,6 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 
 	Map<Path, SourceFile> codeCache = new HashMap<>();	
 
-	@Inject
 	public JsBundlesTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core,mapper);
 	}
