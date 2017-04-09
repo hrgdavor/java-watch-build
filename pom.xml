@@ -12,6 +12,7 @@
 
 	<properties>
 		<jackson-version>2.7.0</jackson-version>
+		<app.main.class>hr.hrg.watch.build.Main</app.main.class>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jetty-version>9.3.16.v20170120</jetty-version>
 	</properties>
@@ -188,7 +189,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>hr.hrg.watch.build.Main</mainClass>
+									<mainClass>${app.main.class}</mainClass>
 								</transformer>
 							</transformers>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
@@ -216,7 +217,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>hr.hrg.watch.build.Main</mainClass>
+									<mainClass>${app.main.class}</mainClass>
 								</transformer>
 							</transformers>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
