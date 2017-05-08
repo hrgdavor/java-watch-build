@@ -57,11 +57,11 @@ public class LangTask implements Runnable{
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
 		
-		folderWatcher = new GlobWatcher(root, false);
+		folderWatcher = new GlobWatcher(root, true);
 		for(String fileName: config.input) {
 			Path path = root.resolve(fileName);
 			File f = path.toFile();
-			if(!f.exists()) throw new RuntimeException("Input file does not exist "+config.input+" "+f.getAbsolutePath());
+			if(!f.exists()) throw new RuntimeException("Input file does not exist "+fileName+" "+f.getAbsolutePath());
 			langFiles.add(path);
 			folderWatcher.includes(fileName);
 		}
