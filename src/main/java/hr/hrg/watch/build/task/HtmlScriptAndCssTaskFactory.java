@@ -51,6 +51,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 		private GlobWatcher scriptsToWatch;
 	
 		private File scriptRoot;
+		long maxLastModified = 0;
 		
 		public Task(HtmlScriptAndCssConfig config, Path outputRoot){
 			this.config = config;
@@ -70,10 +71,14 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			// we will generate script links this.scripts list to enable caching js-bundle data
 			for(String script:config.scripts){
 				scriptsToWatch.includes(script);
+				File file = new File(scriptRoot,script);
+				long mod = file.lastModified();
 				if(script.endsWith("js")){
-					scripts.add(new ScriptEntry(script, new File(scriptRoot,script)));
+					scripts.add(new ScriptEntry(script, file));
+					if(mod >maxLastModified) maxLastModified = mod;
 				}else if(script.endsWith("json")) {
-					scripts.add(new BundleEntry(new File(scriptRoot,script)));
+					scripts.add(new BundleEntry(file));
+					if(mod >maxLastModified) maxLastModified = mod;
 				}else {
 					log.warn("unsupportd script type "+script);
 				}
@@ -164,7 +169,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			}
 			
 			if(offset <html.length()) bHtml.append(html,offset,html.length());
-			if(!TaskUtils.writeFile(Paths.get(config.output), bHtml.toString().getBytes(), config.compareBytes)) {
+			if(!TaskUtils.writeFile(Paths.get(config.output), bHtml.toString().getBytes(), config.compareBytes, maxLastModified)){
 				log.trace("skip identical: "+config.output);			
 			}
 		}
@@ -208,6 +213,8 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 							
 							for (Path file : htmlFiles) {
 								if(log.isInfoEnabled())	log.info("includes changed for: "+file);
+								long mod = file.toFile().lastModified();
+								if(mod > maxLastModified) maxLastModified = mod;
 								genHtml(file);
 							}
 						}						

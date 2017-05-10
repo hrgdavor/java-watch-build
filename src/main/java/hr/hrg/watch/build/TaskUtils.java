@@ -68,18 +68,22 @@ public class TaskUtils {
 		return false;
 	}
 	
-	public static final boolean writeFile(Path to, byte[] newBytes, boolean compareBytes){
+	public static final boolean writeFile(Path to, byte[] newBytes, boolean compareBytes, long newLastModified){
 
 		File toFile = to.toFile();
 
-		if(compareBytes && toFile.exists()){
-			if(TaskUtils.compareBytes(toFile, newBytes)){
-				return false;
+		if(toFile.exists()){
+			if(toFile.lastModified() > newLastModified) return false;
+
+			if(compareBytes){
+				if(TaskUtils.compareBytes(toFile, newBytes)){
+					return false;
+				}
 			}
 		}
 		
 		writeFile(to, newBytes);
-		
+		toFile.setLastModified(newLastModified);
 		return true;
 	}
 

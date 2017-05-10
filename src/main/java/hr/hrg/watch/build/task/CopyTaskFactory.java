@@ -110,10 +110,10 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 				} catch (IOException e1) {
 					e1.printStackTrace();
 					return false; // something was wrong while reading
-				}			
+				}
 			}
 	
-			if(shouldCopy && TaskUtils.writeFile(to, newBytes, config.compareBytes)){			
+			if(shouldCopy && TaskUtils.writeFile(to, newBytes, config.compareBytes, fromFile.lastModified())){			
 				log.info("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
 				return true;
 			}else{

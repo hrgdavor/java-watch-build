@@ -110,7 +110,8 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 				} catch (Exception e) {
 					log.error("ERROR generating gzip ",e);
 				}
-				log.info("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());		
+				log.info("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
+				toFile.setLastModified(fromFile.lastModified());
 				return true;
 			}else{
 				log.trace("skip already generated: "+to);		

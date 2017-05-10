@@ -40,7 +40,7 @@ public class LangTask implements Runnable{
 	private Path root;
 	
 	private Map<String , String> trans = new HashMap<>();
-	private long lastModified;
+	private long maxLastModified;
 	private ObjectMapper objectMapper;
 	private YAMLMapper yamlMapper;
 
@@ -62,6 +62,10 @@ public class LangTask implements Runnable{
 			Path path = root.resolve(fileName);
 			File f = path.toFile();
 			if(!f.exists()) throw new RuntimeException("Input file does not exist "+fileName+" "+f.getAbsolutePath());
+			
+			long mod = f.lastModified();
+			if(mod > maxLastModified) maxLastModified = mod;
+			
 			langFiles.add(path);
 			folderWatcher.includes(fileName);
 		}
@@ -84,6 +88,8 @@ public class LangTask implements Runnable{
 				
 				for (Path changeEntry : changes) {
 					if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.toFile().lastModified());
+					long mod = changeEntry.toFile().lastModified();
+					if(mod > maxLastModified) maxLastModified = mod;
 					genFiles();
 				}
 			}
@@ -99,7 +105,7 @@ public class LangTask implements Runnable{
 			log.trace("No translations changed");
 			return false;
 		}
-		this.lastModified = update.lastModified;
+		this.maxLastModified = update.lastModified;
 
 		if(config.output != null){
 			for(String out: config.output){
@@ -125,7 +131,7 @@ public class LangTask implements Runnable{
 		for(Path from:langFiles) {
 			String fileName = from.getFileName().toString();
 			
-			// calc max lastModified
+			// calc max maxLastModified
 			long tmp = from.toFile().lastModified();
 			if(tmp > lastModified) lastModified = tmp;
 			
@@ -265,7 +271,7 @@ public class LangTask implements Runnable{
 			throw new RuntimeException("File type not supported "+to);
 		}
 		
-		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), config.compareBytes)){
+		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
 			log.info("Generating "+to);
 			return true;
 		}else{
@@ -328,6 +334,6 @@ public class LangTask implements Runnable{
 	}
 	
 	public long lastModified() {
-		return lastModified;
+		return maxLastModified;
 	}	
 }

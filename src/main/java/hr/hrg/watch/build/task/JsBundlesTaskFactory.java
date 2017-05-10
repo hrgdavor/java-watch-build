@@ -60,6 +60,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		private Path rootPath;
 		GlobWatcher watcher;
 		private String lang;
+		private long maxLastModified;
 
 		Task(JsBundlesConfig config, String lang){
 			this.config = config;
@@ -105,7 +106,11 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 					
 					// clear changed files from cache
 					for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
-						if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
+						if(log.isInfoEnabled()) {
+							long newModified = changeEntry.getPath().toFile().lastModified();
+							log.info("changed: "+changeEntry+" "+newModified);
+							if(newModified > maxLastModified) maxLastModified = newModified;
+						}
 						codeCache.remove(changeEntry.getPath());
 					}
 					
@@ -152,6 +157,10 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				}
 			}
 			
+			for(PathWithWeight pw:pathsToBuild){
+				File file = pw.path.toFile();
+				if(file.lastModified() > maxLastModified) maxLastModified = file.lastModified();				
+			}
 			
 			writeText(pathsToBuild);
 			writeJson(pathsToBuild);
@@ -166,7 +175,6 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				for(JsonNode scriptNode: files) {
 					String scriptFile = scriptNode.get("script").asText();
 					Path scriptPath = bundleFile.resolveSibling(scriptFile);
-					long modified = scriptNode.get("modified").asLong();
 					if(scriptFile.endsWith(".json")){
 						fillFromBundle(pathsToBuild, scriptPath, weight);
 					}else {
@@ -231,14 +239,15 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				writer.write("//# sourceMappingURL="+options.sourceMapOutputPath);
 				writer.close();
 	
-				if(TaskUtils.writeFile(rootPath.resolve(outputJS), byteOutput.toByteArray(), config.compareBytes)){
+				if(TaskUtils.writeFile(rootPath.resolve(outputJS), byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
 					log.info("Generating "+outputJS+" DONE "+(System.currentTimeMillis()-start)+"ms");
 					log.info("Generating "+options.sourceMapOutputPath);
 					start = System.currentTimeMillis();
 					writer2 = new PrintWriter(rootPath.resolve(options.sourceMapOutputPath).toFile());
 					result.sourceMap.appendTo(writer2, options.sourceMapOutputPath);
 					writer2.close();
-					log.info("Generating "+options.sourceMapOutputPath+" DONE "+(System.currentTimeMillis()-start)+"ms");				
+					log.info("Generating "+options.sourceMapOutputPath+" DONE "+(System.currentTimeMillis()-start)+"ms");	
+					
 				}else{
 					log.trace("skip identical: "+outputJS);
 				}
@@ -280,8 +289,10 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				writer.write("}");
 				writer.close();
 	
-				if(TaskUtils.writeFile(rootPath.resolve(output), byteOutput.toByteArray(), config.compareBytes)){
+				Path outputPath = rootPath.resolve(output);
+				if(TaskUtils.writeFile(outputPath, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
 					log.info("Generating "+output);
+					outputPath.toFile().setLastModified(maxLastModified);
 				}else{
 					log.trace("skip identical: "+output);
 				}
@@ -314,7 +325,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				}
 				writer.close();
 	
-				if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), config.compareBytes)){
+				if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
 					log.info("Generating "+outputText);
 				}else{
 					log.trace("skip identical: "+outputText);

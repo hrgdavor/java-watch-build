@@ -128,10 +128,9 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 		}
 
 		long lastModified = toFile.lastModified();
-		boolean copy = 
-					fromFile.lastModified() > lastModified
-				|| (tplFile != null && tplFile.lastModified() > lastModified)
-				|| langTask.lastModified() > lastModified;
+		long srcLastModified = Math.max(fromFile.lastModified(), langTask.lastModified());
+		if(tplFile != null && tplFile.lastModified() > srcLastModified) srcLastModified = tplFile.lastModified(); 
+		boolean copy = srcLastModified > lastModified;
 
 		if(!copy){
 			log.trace("Generated file is newer than all inputs "+toFile);
@@ -142,7 +141,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 		combineTemplate(from, tplFile,out);
 		byte[] newBytes = out.toByteArray();			
 
-		if(TaskUtils.writeFile(to, newBytes, config.compareBytes)){
+		if(TaskUtils.writeFile(to, newBytes, config.compareBytes, srcLastModified)){
 			log.info("generated:      "+to);
 			return true;
 		}else{
