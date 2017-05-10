@@ -37,6 +37,7 @@ import hr.hrg.watch.build.task.JsBundlesTaskFactory;
 import hr.hrg.watch.build.task.JsCompTaskFactory;
 import hr.hrg.watch.build.task.LangTaskFactory;
 import hr.hrg.watch.build.task.NoOpTaskFactory;
+import hr.hrg.watch.build.task.SassBundlesTaskFactory;
 import hr.hrg.watch.build.task.SassTaskFactory;
 import hr.hrg.watch.build.task.ScriptTaskFactory;
 import hr.hrg.watch.build.task.TaskFactory;
@@ -133,6 +134,7 @@ public class Main {
 		// advanced tasks (in mini shaded bundle:  sass is not included at all, jsbundles works, but can not compile js)
 		factories.put("jsbundles", new JsBundlesTaskFactory(watchBuild,mapper));
 		factories.put("sass", new SassTaskFactory(watchBuild,mapper));
+		factories.put("sassbundles", new SassBundlesTaskFactory(watchBuild,mapper));
 		
 		// misc personally used for joining javascript and template into one file
 		factories.put("jscomp", new JsCompTaskFactory(watchBuild,mapper));
