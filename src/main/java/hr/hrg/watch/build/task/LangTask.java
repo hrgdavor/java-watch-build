@@ -1,11 +1,8 @@
 package hr.hrg.watch.build.task;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +22,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.LanguageChangeListener;
-import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.LangConfig;
 
@@ -37,23 +33,19 @@ public class LangTask implements Runnable{
 	
 	public static final int BUFFER_SIZE = 4096;
 	private List<LanguageChangeListener> listeners = new ArrayList<>();
-	private Path root;
 	
 	private Map<String , String> trans = new HashMap<>();
 	private long maxLastModified;
 	private ObjectMapper objectMapper;
 	private YAMLMapper yamlMapper;
 
-	private LangConfig config;
 	private List<Path> langFiles = new ArrayList<>();
 	
 	private WatchBuild core;
 
 
 	public LangTask(LangConfig config, WatchBuild core, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
-		this.config = config;
 		this.core = core;
-		this.root = root;
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
 		
@@ -68,12 +60,12 @@ public class LangTask implements Runnable{
 			
 			langFiles.add(path);
 			folderWatcher.includes(fileName);
-		}
+		}		
 	}
 
 	public void start(boolean watch){
 		folderWatcher.init(watch);		
-		genFiles();
+		notifyListeners(false);
 	}
 
 	public Map<String, String> getTrans() {
@@ -90,15 +82,16 @@ public class LangTask implements Runnable{
 					if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.toFile().lastModified());
 					long mod = changeEntry.toFile().lastModified();
 					if(mod > maxLastModified) maxLastModified = mod;
-					genFiles();
 				}
+
+				notifyListeners(true);
 			}
 		} finally {
 			folderWatcher.close();
 		}
 	}
 
-	protected boolean genFiles(){
+	protected boolean notifyListeners(boolean notify){
 		Update update = this.updateLanguage();
 		
 		if(update.changes.size() == 0 && update.removed.size() == 0){
@@ -106,12 +99,9 @@ public class LangTask implements Runnable{
 			return false;
 		}
 		this.maxLastModified = update.lastModified;
+		
+		if(!notify) return true;
 
-		if(config.output != null){
-			for(String out: config.output){
-				this.genFile(update.newTrans, root.resolve(out));
-			}			
-		}
 		for(LanguageChangeListener listener: listeners){
 			try {
 				listener.languageChanged(update);
@@ -186,18 +176,6 @@ public class LangTask implements Runnable{
 		}
 	}
 
-	private void genProperties(Map<String, String> newTrans, OutputStream out) {
-		Properties prop = new Properties();
-		try {
-			for(Entry<String, String> e: newTrans.entrySet()){
-				prop.setProperty(e.getKey(), e.getValue());
-			}
-			prop.store(out,null);
-		}catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	private void fromJson(Map<String, String> newTrans, Path from) {
 		try {
 			JsonNode tree = objectMapper.readTree(from.toFile());
@@ -208,23 +186,6 @@ public class LangTask implements Runnable{
 				newTrans.put(e.getKey(), e.getValue().asText());
 			}
 			
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void genJson(Map<String, String> newTrans, OutputStream out) {
-		try {
-			objectMapper.writeValue(out,newTrans);			
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private void genJs(Map<String, String> newTrans, OutputStream out) {
-		try {
-			out.write(("var "+config.varName+" = ").getBytes());
-			objectMapper.writeValue(out,newTrans);	
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -243,59 +204,6 @@ public class LangTask implements Runnable{
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	private void genYaml(Map<String, String> newTrans, OutputStream out) {
-		try {
-			yamlMapper.writeValue(out,newTrans);			
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	
-	protected boolean genFile(Map<String, String> newTrans, Path to){
-		String fileName = to.getFileName().toString();
-
-		ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
-		
-		if(fileName.endsWith(".properties")){
-			genProperties(newTrans,byteOutput);
-		}else if(fileName.endsWith(".json")){
-			genJson(newTrans, byteOutput);
-		}else if(fileName.endsWith(".js")){
-			genJs(newTrans, byteOutput);
-		}else if(fileName.endsWith(".yml") || fileName.endsWith(".yaml")){
-			genYaml(newTrans, byteOutput);
-		}else{
-			throw new RuntimeException("File type not supported "+to);
-		}
-		
-		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
-			log.info("Generating "+to);
-			return true;
-		}else{
-			log.trace("skip identical: "+to);
-			return false;
-		}
-	}
-
-	protected void closeStream(InputStream in) {
-		if (in != null)
-			try {
-				in.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-	}
-
-	protected void closeStream(OutputStream out) {
-		if (out != null)
-			try {
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 	}
 	
 	public static class Update{

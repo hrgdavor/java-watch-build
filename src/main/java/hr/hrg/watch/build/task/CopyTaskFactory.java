@@ -6,8 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +15,8 @@ import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.JsonMapper;
-import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.CopyConfig;
 
 public class CopyTaskFactory extends AbstractTaskFactory{

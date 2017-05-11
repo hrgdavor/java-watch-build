@@ -2,9 +2,9 @@ package hr.hrg.watch.build.task;
 
 import java.util.List;
 
-import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
+import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.option.OptionException;
 
 public class EnvTaskFactory implements TaskFactory{
@@ -22,7 +22,7 @@ public class EnvTaskFactory implements TaskFactory{
 
 	@Override
 	public void start(String inlineParam,List<Object> config, boolean watch) {
-		List list = TaskUtils.checkOption(config, 0, List.class);
+		List<?> list = TaskUtils.checkOption(config, 0, List.class);
 		if(list.size() == 0) return;
 		
 		if(!(list.get(0)instanceof String)) throw new OptionException(0,"List of strings expected");

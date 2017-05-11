@@ -211,8 +211,6 @@ public class WatchBuild {
 			return;
 		}
 		included.put(confFile, confFile);
-		
-		String newLine = System.getProperty("line.separator");
 
 		String line = null;
 		String trimmed;

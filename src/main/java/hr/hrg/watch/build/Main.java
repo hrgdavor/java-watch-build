@@ -3,28 +3,12 @@ package hr.hrg.watch.build;
 import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
-import java.util.List;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import org.slf4j.ILoggerFactory;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.LoggerContextListener;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.AppenderBase;
-import ch.qos.logback.core.Context;
-import ch.qos.logback.core.LogbackException;
-import ch.qos.logback.core.filter.Filter;
-import ch.qos.logback.core.spi.FilterReply;
-import ch.qos.logback.core.status.Status;
 import hr.hrg.watch.build.option.LinesOptionParser;
 import hr.hrg.watch.build.option.OptionParser;
 import hr.hrg.watch.build.option.YamlOptionParser;
@@ -35,6 +19,7 @@ import hr.hrg.watch.build.task.HtmlScriptAndCssTaskFactory;
 import hr.hrg.watch.build.task.ImportTaskFactory;
 import hr.hrg.watch.build.task.JsBundlesTaskFactory;
 import hr.hrg.watch.build.task.JsCompTaskFactory;
+import hr.hrg.watch.build.task.LangOutputTaskFactory;
 import hr.hrg.watch.build.task.LangTaskFactory;
 import hr.hrg.watch.build.task.NoOpTaskFactory;
 import hr.hrg.watch.build.task.SassBundlesTaskFactory;
@@ -127,18 +112,19 @@ public class Main {
 		factories.put("defvar", new VarTaskFactory(watchBuild,false));
 		
 		// basic
-		factories.put("copy", new CopyTaskFactory(watchBuild,mapper));
-		factories.put("gzip", new GzipTaskFactory(watchBuild,mapper));
-		factories.put("script", new ScriptTaskFactory(watchBuild,mapper));
+		factories.put("Copy", new CopyTaskFactory(watchBuild,mapper));
+		factories.put("Gzip", new GzipTaskFactory(watchBuild,mapper));
+		factories.put("Script", new ScriptTaskFactory(watchBuild,mapper));
 		
 		// advanced tasks (in mini shaded bundle:  sass is not included at all, jsbundles works, but can not compile js)
-		factories.put("jsbundles", new JsBundlesTaskFactory(watchBuild,mapper));
-		factories.put("sass", new SassTaskFactory(watchBuild,mapper));
-		factories.put("sassbundles", new SassBundlesTaskFactory(watchBuild,mapper));
+		factories.put("JsBundles", new JsBundlesTaskFactory(watchBuild,mapper));
+		factories.put("Sass", new SassTaskFactory(watchBuild,mapper));
+		factories.put("SassBundles", new SassBundlesTaskFactory(watchBuild,mapper));
 		
 		// misc personally used for joining javascript and template into one file
-		factories.put("jscomp", new JsCompTaskFactory(watchBuild,mapper));
-		factories.put("language", new LangTaskFactory(watchBuild,mapper, yamlMapper));
+		factories.put("JsComp", new JsCompTaskFactory(watchBuild,mapper));
+		factories.put("Language", new LangTaskFactory(watchBuild,mapper, yamlMapper));
+		factories.put("LanguageOutput", new LangOutputTaskFactory(watchBuild,mapper, yamlMapper));
 		factories.put("HtmlScriptAndCss", new HtmlScriptAndCssTaskFactory(watchBuild,mapper));
 		
 

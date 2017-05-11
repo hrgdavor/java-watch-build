@@ -1,9 +1,9 @@
 package hr.hrg.watch.build.config;
 
-import hr.hrg.watch.build.WatchBuild;;
-
 public class ConfigException extends RuntimeException {
 	
+	private static final long serialVersionUID = 2624348181797788190L;
+
 	boolean withConfigInfo;
 	private ConfDef def;
 	

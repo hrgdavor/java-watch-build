@@ -29,7 +29,7 @@ public class LangTaskFactory extends AbstractTaskFactory{
 		task.start(watch);
 
 		if(watch)
-			core.addThread(new Thread(task,"Language:"+config.input+" to "+config.output));
+			core.addThread(new Thread(task,"Language:"+config.input));
 
 	}
 

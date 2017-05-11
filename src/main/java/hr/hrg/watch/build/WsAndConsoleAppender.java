@@ -7,7 +7,7 @@ public class WsAndConsoleAppender<E> extends ConsoleAppender<E>{
 	@Override
 	protected void append(E event) {
 		super.append(event);
-		byte[] bytes = this.encoder.encode(event);
+//		byte[] bytes = this.encoder.encode(event);
 //		System.err.write(bytes,0,bytes.length);
 	}
 }

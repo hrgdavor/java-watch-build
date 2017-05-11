@@ -153,6 +153,7 @@ public class TaskUtils {
 		return node;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T extends JsonNode> T copy(ObjectMapper mapper, T node) {
 		try {
 			return (T) mapper.readTree(node.traverse());
@@ -161,6 +162,7 @@ public class TaskUtils {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T checkOption(List<Object> config, int i, Class<T> class1) {
 		Object object = config.get(i);
 		try {

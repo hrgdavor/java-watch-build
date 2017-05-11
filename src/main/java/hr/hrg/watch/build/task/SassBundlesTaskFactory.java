@@ -10,29 +10,20 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.javascript.jscomp.CompilationLevel;
-import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.Result;
-import com.google.javascript.jscomp.SourceFile;
 
 import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
-import hr.hrg.javawatcher.WatchUtil;
 import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
-import hr.hrg.watch.build.config.ConfigException;
-import hr.hrg.watch.build.config.JsBundlesConfig;
 import hr.hrg.watch.build.config.SassBundlesConfig;
 
 public class SassBundlesTaskFactory extends AbstractTaskFactory {
@@ -58,12 +49,9 @@ public class SassBundlesTaskFactory extends AbstractTaskFactory {
 		private SassBundlesConfig config;
 		private Path rootPath;
 		GlobWatcher watcher;
-		private String lang;
 
 		Task(SassBundlesConfig config2, String lang){
-			this.config = config2;
-			this.lang = lang;
-			
+			this.config = config2;			
 		}
 		
 		public void start(boolean watch) {
@@ -164,7 +152,6 @@ public class SassBundlesTaskFactory extends AbstractTaskFactory {
 				for(JsonNode scriptNode: files) {
 					String scriptFile = scriptNode.get("script").asText();
 					Path scriptPath = bundleFile.resolveSibling(scriptFile);
-					long modified = scriptNode.get("modified").asLong();
 					if(scriptFile.endsWith(".json")){
 						fillFromBundle(pathsToBuild, scriptPath, weight);
 					}else {

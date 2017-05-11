@@ -28,7 +28,7 @@ public class ImportTaskFactory implements TaskFactory{
 		if(inlineParam != null && !TaskUtils.emptyOrcomment(inlineParam)) core.loadFile(Paths.get(vars.expand(inlineParam)));
 		
 		if(config.get(0) == null) return;
-		List list = TaskUtils.checkOption(config, 0, List.class);
+		List<?> list = TaskUtils.checkOption(config, 0, List.class);
 		if(list.size() == 0) return;		
 		
 		if(!(list.get(0)instanceof String)) throw new OptionException(0,"List of strings expected");

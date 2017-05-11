@@ -7,8 +7,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.zip.GZIPOutputStream;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +42,8 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 
 		private GlobWatcher watcher;
 		protected Path toPath;
-		private GzipConfig config;
-
 
 		public Task(GzipConfig config) {
-			this.config = config;
 			if(config.output == null) config.output = config.input;
 
 			File f = new File(config.input);
