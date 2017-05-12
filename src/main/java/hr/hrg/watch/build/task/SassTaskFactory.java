@@ -27,6 +27,7 @@ public class SassTaskFactory extends AbstractTaskFactory {
 		options.pathStrInput  = config.input;
 		options.pathStrOutput = config.output;
 		options.pathStrInclude = config.include;
+		options.pathStrExclude = config.exclude;
 		options.outputStyle    = config.outputStyle;
 
 		options.embedSourceMapInCSS    = config.embedSourceMapInCSS;
