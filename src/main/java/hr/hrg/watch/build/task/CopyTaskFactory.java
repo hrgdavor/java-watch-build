@@ -98,7 +98,10 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 		protected boolean copyFile(Path from, Path to){
 			File fromFile = from.toFile();
 			File toFile = to.toFile();
-			boolean shouldCopy = !toFile.exists() || fromFile.lastModified() > toFile.lastModified();
+			boolean shouldCopy = 
+					   !toFile.exists() 
+					|| fromFile.lastModified() > toFile.lastModified()
+					|| fromFile.length() != toFile.length();
 	
 			byte[] newBytes = null;;
 	
@@ -115,7 +118,12 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 				log.info("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
 				return true;
 			}else{
-				log.trace("skip identical: "+to);		
+				if(shouldCopy) {
+					log.trace("skip identical: "+to);
+					if(config.reverseSyncModified && config.compareBytes && fromFile.lastModified() > toFile.lastModified()) {
+						fromFile.setLastModified(toFile.lastModified());
+					}
+				}
 				return false;
 			}
 		}

@@ -133,7 +133,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 		boolean copy = srcLastModified > lastModified;
 
 		if(!copy){
-			log.trace("Generated file is newer than all inputs "+toFile);
+			log.trace("Generated file is newer than all inputs "+toFile+" "+srcLastModified+" "+lastModified);
 			return false;
 		}
 				

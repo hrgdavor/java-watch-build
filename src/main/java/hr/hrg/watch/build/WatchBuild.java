@@ -42,6 +42,8 @@ public class WatchBuild {
 	protected Map<String, Object> namedTasks = new ConcurrentHashMap<>();	
 	protected List<Thread> threads = new ArrayList<>();
 
+	protected List<ErrorEntry> errors = new ArrayList<>();
+	
 	private boolean watch;
 	private boolean dryRun;
 	private Path outputRoot;
@@ -182,7 +184,7 @@ public class WatchBuild {
 
 	public void startBuild() {
 		try {
-			
+			errors.clear();
 			loadFile(confFile);
 			
 			if(threads.size() >0) System.out.println("Starting "+threads.size()+" watch threads");
@@ -191,6 +193,15 @@ public class WatchBuild {
 				thread.start();
 			}
 			
+			if(errors.size() >0) {
+				System.out.println();
+				System.out.println();
+				System.out.println(errors.size()+" Errors reported during initialization ");
+				for(ErrorEntry err:errors) {
+					System.out.println("ERROR: "+err.message);
+				}
+				System.out.println();
+			}
 		} catch (ConfigException e) {
 			log.error(e.getMessage(),e);
 			log.error("Configuration Error ******************************************************************************************************** \n\n"
@@ -386,4 +397,32 @@ public class WatchBuild {
 		return "";
 	}
 
+	public List<ErrorEntry> getErrors() {
+		return errors;
+	}
+	
+	public void logError(Logger log2, String string) {
+		log2.error(string);
+		errors.add(new ErrorEntry(string));
+	}
+
+	public void logError(Logger log2, String string, Throwable e) {
+		log2.error(string,e);
+		errors.add(new ErrorEntry(string,e));
+	}
+
+	class ErrorEntry{
+
+		private String message;
+		private Throwable err;
+
+		public ErrorEntry(String message, Throwable err) {
+			this.message = message;
+			this.err = err;
+		}
+		public ErrorEntry(String message) {
+			this.message = message;
+		}
+		
+	}
 }

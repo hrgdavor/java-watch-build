@@ -73,7 +73,7 @@ public class TaskUtils {
 		File toFile = to.toFile();
 
 		if(toFile.exists()){
-			if(toFile.lastModified() > newLastModified) return false;
+			if(toFile.lastModified() >= newLastModified && toFile.length() == newBytes.length) return false;
 
 			if(compareBytes){
 				if(TaskUtils.compareBytes(toFile, newBytes)){

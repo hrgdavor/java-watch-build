@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -129,7 +130,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	
 					}else if(entry instanceof BundleEntry) {
 						BundleEntry bundle = (BundleEntry) entry;
-						if(bundle.lastModified == 0 || bundle.lastModified < bundle.bundleFile.lastModified()) {
+						if(bundle.lastModified < bundle.bundleFile.lastModified()) {
 							loadBundle(bundle);
 						}
 						for(JsInBundle js:bundle.scripts) {
@@ -187,6 +188,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 						bundle.scripts.add(jsInBundle);
 					}
 				}
+				bundle.lastModified = bundle.bundleFile.lastModified();
 			} catch (IOException e){
 				log.error("Error reading bundle "+bundle.bundleFile.getAbsolutePath() + " "+e.getMessage(),e);
 			}
@@ -210,11 +212,13 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 							Collection<Path> changes = scriptsToWatch.takeBatchFiles(core.getBurstDelay());
 							if(changes == null) break; // null means interrupted, and we should end this loop
 							
+							for(Path p: changes){
+								long mod = p.toFile().lastModified();
+								if(mod > maxLastModified) maxLastModified = mod;								
+							}
 							
 							for (Path file : htmlFiles) {
 								if(log.isInfoEnabled())	log.info("includes changed for: "+file);
-								long mod = file.toFile().lastModified();
-								if(mod > maxLastModified) maxLastModified = mod;
 								genHtml(file);
 							}
 						}						

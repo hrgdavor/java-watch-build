@@ -79,7 +79,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 			for(String inc:config.include){
 				if(inc.indexOf('*') == -1){
 					//exact path, check existence and report error if not present (very useful if it is a typo)
-					if(! new File(root,inc).exists()) log.error("Bundle:"+config.name+" File not found: "+inc);
+					if(! new File(root,inc).exists()) core.logError(log,"Bundle:"+config.name+" File not found: "+inc);
 				}
 			}
 			
