@@ -32,6 +32,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		if(args.length == 0) printHelp();
+		System.setProperty("file.encoding","UTF-8");
 		
 //		ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
 //		if(loggerFactory instanceof LoggerContext) {
