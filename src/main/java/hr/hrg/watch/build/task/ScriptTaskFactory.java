@@ -15,6 +15,7 @@ import hr.hrg.javawatcher.Main;
 import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ScriptConfig;
+import hr.hrg.watch.build.config.TaskDef;
 
 public class ScriptTaskFactory extends AbstractTaskFactory{
 
@@ -25,13 +26,13 @@ public class ScriptTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
 		ScriptConfig config = mapper.convertValue(root, ScriptConfig.class);
 		 
-		Task task = new Task(config, Paths.get("."), inlineParam);
+		Task task = new Task(config, Paths.get("."), taskDef.params);
 		task.start(watch);
 		if(watch)
-			core.addThread(new Thread(task,"Script:"+inlineParam+" watching "+config.initLine));
+			core.addThread(new Thread(task,"Script:"+taskDef.params+" watching "+config.initLine));
 
 	}
 	

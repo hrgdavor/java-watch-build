@@ -7,6 +7,7 @@ import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.SassConfig;
+import hr.hrg.watch.build.config.TaskDef;
 import hr.hrg.watchsass.Compiler;
 import hr.hrg.watchsass.CompilerOptions;
 
@@ -17,7 +18,7 @@ public class SassTaskFactory extends AbstractTaskFactory {
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
 		if(!WatchUtil.classAvailable("hr.hrg.watchsass.Compiler")) {
 			throw new ConfigException("Sass compiling task is not avaiable due to missing dependecy hr.hrg:java-watch-sass (download full shaded version to fix or remove the @sass task)",null);
 		}

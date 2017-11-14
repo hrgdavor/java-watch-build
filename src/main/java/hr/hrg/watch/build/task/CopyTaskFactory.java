@@ -18,6 +18,7 @@ import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.CopyConfig;
+import hr.hrg.watch.build.config.TaskDef;
 
 public class CopyTaskFactory extends AbstractTaskFactory{
 
@@ -28,7 +29,7 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
 		CopyConfig config = mapper.convertValue(root, CopyConfig.class);
 		
 		Task task = new Task(config);
@@ -47,10 +48,10 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 
 		public Task(CopyConfig config) {
 			this.config = config;
-			File f = new File(config.input);
+			File f = core.getBasePath().resolve(config.input).toFile();
 			int i=0;
 			while(!f.exists() && i<config.altFolder.size()){
-				f = new File(config.altFolder.get(i));
+				f = core.getBasePath().resolve(config.altFolder.get(i)).toFile();
 				i++;
 			}
 			if(!f.exists()) throw new RuntimeException("Folder and alternatives do not exist "+config.input+" "+f.getAbsolutePath());

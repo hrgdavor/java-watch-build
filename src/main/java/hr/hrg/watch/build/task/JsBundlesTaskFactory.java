@@ -33,6 +33,7 @@ import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.JsBundlesConfig;
+import hr.hrg.watch.build.config.TaskDef;
 
 public class JsBundlesTaskFactory extends AbstractTaskFactory {
 
@@ -45,7 +46,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch){
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch){
 		JsBundlesConfig config = mapper.convertValue(root, JsBundlesConfig.class);
 		
 		Task task = new Task(config, lang);

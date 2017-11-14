@@ -2,6 +2,8 @@ package hr.hrg.watch.build.task;
 
 import java.util.List;
 
+import hr.hrg.watch.build.config.TaskDef;
+
 public class NoOpTaskFactory implements TaskFactory{
 	
 
@@ -11,7 +13,7 @@ public class NoOpTaskFactory implements TaskFactory{
 	}
 
 	@Override
-	public void start(String inlineParam,List<Object> config, boolean watch) {
+	public void start(TaskDef taskDef,List<Object> config, boolean watch) {
 		
 	}
 	

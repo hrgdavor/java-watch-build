@@ -1,10 +1,12 @@
 package hr.hrg.watch.build.task;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
 import hr.hrg.watch.build.WatchBuild;
+import hr.hrg.watch.build.config.TaskDef;
 import hr.hrg.watch.build.option.OptionException;
 
 public class EnvTaskFactory implements TaskFactory{
@@ -21,7 +23,7 @@ public class EnvTaskFactory implements TaskFactory{
 	}
 
 	@Override
-	public void start(String inlineParam,List<Object> config, boolean watch) {
+	public void start(TaskDef taskDef,List<Object> config, boolean watch) {
 		List<?> list = TaskUtils.checkOption(config, 0, List.class);
 		if(list.size() == 0) return;
 		

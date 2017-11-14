@@ -1,5 +1,6 @@
 package hr.hrg.watch.build.task;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,6 +10,7 @@ import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarMap;
 import hr.hrg.watch.build.config.ConfigException;
+import hr.hrg.watch.build.config.TaskDef;
 
 public abstract class AbstractTaskFactory implements TaskFactory {
 	
@@ -21,7 +23,8 @@ public abstract class AbstractTaskFactory implements TaskFactory {
 	}
 
 	@Override
-	public void start(String inlineParam, List<Object> config, boolean watch) {
+	public void start(TaskDef task , List<Object> config, boolean watch) {
+		
 		JsonNode root = TaskUtils.checkOption(config, 0, JsonNode.class);
 		
 		String lang = core.getLang();
@@ -50,25 +53,27 @@ inlineParam is expanded to be inline with config regarding language
 						JsonNode items = tmp.get("items");
 						vars.put("lang", tmpLang);
 						for(JsonNode item: items){
-							startOne(vars.expand(inlineParam), tmpLang, item, watch);							
+							startOne(task, tmpLang, item, watch);							
 						}
 						vars.put("lang", lang);
 					}else{// norma multiple configs to run mutliple tasks of same type
-						startOne(vars.expand(inlineParam), lang, tmp, watch);						
+						startOne(task, lang, tmp, watch);						
 					}
 					i++;
 				}
 				
+			} catch (ConfigException e) {
+				throw e;
 			} catch (Exception e) {
 				System.out.println(core.getJson(root.get(i)));
-				throw new ConfigException("problem starting config object#"+i+" "+e.getMessage(), e);
+				throw new ConfigException(task,"problem starting config object#"+i+" "+e.getMessage(), e);
 			}
 		}else{
-			startOne(vars.expand(inlineParam), lang, root, watch);
+			startOne(task, lang, root, watch);
 		}
 	}
 	
-	public abstract void startOne(String inlineParam, String lang, JsonNode root, boolean watch);
+	public abstract void startOne(TaskDef task, String lang, JsonNode root, boolean watch);
 
 	@Override
 	public String getDefaultOptionParser() {

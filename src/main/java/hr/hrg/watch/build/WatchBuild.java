@@ -47,6 +47,7 @@ public class WatchBuild {
 	private boolean watch;
 	private boolean dryRun;
 	private Path outputRoot;
+	private Path basePath;
 	private long burstDelay = 50;
 	protected VarMap vars;
 	
@@ -99,6 +100,10 @@ public class WatchBuild {
 	
 	public Path getOutputRoot() {
 		return outputRoot;
+	}
+
+	public Path getBasePath() {
+		return basePath;
 	}
 	
 	public long getBurstDelay() {
@@ -177,8 +182,12 @@ public class WatchBuild {
 		startBuild();
 	}
 	public void runBuild(String file) {
+		
 		confFile = Paths.get(file);
-		outputRoot = confFile.toAbsolutePath().getParent();
+		
+		basePath = Paths.get("./");
+		outputRoot = basePath;
+
 		startBuild();
 	}
 
@@ -334,7 +343,7 @@ public class WatchBuild {
 						
 						options.add(optionParser.parse(op));
 					}
-					taskFactory.start(task.params, options, watch);
+					taskFactory.start(task, options, watch);
 					if(taskFactory instanceof VarTaskFactory) {
 						afterVars();
 					}

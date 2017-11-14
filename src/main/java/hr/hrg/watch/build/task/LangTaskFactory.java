@@ -7,6 +7,7 @@ import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.LangConfig;
+import hr.hrg.watch.build.config.TaskDef;
 
 public class LangTaskFactory extends AbstractTaskFactory{
 	
@@ -18,7 +19,7 @@ public class LangTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
 		LangConfig config = mapper.convertValue(root, LangConfig.class);
 
 		if(lang == null) throw new ConfigException("Language task can not run without 'lang' in the enviroment", null); 

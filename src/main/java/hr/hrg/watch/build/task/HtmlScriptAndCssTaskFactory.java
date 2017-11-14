@@ -21,6 +21,7 @@ import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.HtmlScriptAndCssConfig;
+import hr.hrg.watch.build.config.TaskDef;
 
 public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 
@@ -31,7 +32,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
 		HtmlScriptAndCssConfig config = mapper.convertValue(root, HtmlScriptAndCssConfig.class);
 
 		Task task = new Task(config, core.getOutputRoot());

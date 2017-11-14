@@ -49,11 +49,13 @@ public class LangTask implements Runnable{
 		this.yamlMapper = yamlMapper;
 		this.objectMapper = objectMapper;
 		
-		folderWatcher = new GlobWatcher(root, true);
+		Path inputRoot = core.getBasePath();
+		
+		folderWatcher = new GlobWatcher(inputRoot, true);
 		for(String fileName: config.input) {
-			Path path = root.resolve(fileName);
+			Path path = inputRoot.resolve(fileName);
 			File f = path.toFile();
-			if(!f.exists()) throw new RuntimeException("Input file does not exist "+fileName+" "+f.getAbsolutePath());
+			if(!f.exists()) throw new RuntimeException("Input file does not exist "+inputRoot+" + "+fileName+" -> "+f.getAbsolutePath());
 			
 			long mod = f.lastModified();
 			if(mod > maxLastModified) maxLastModified = mod;

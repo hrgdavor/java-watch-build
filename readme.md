@@ -67,3 +67,21 @@ I
 ## License
 
 See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
+
+# import
+Path resolving for import
+
+Path relative to ${script_path} (must start with `./` or `../`)
+```
+@import ./build1.yml 
+@import ../fodler/other.yml 
+
+```
+
+
+Path relative to ${base_path}
+```
+@import build1.yml 
+@import /build1.yml 
+
+```

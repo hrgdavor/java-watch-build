@@ -1,11 +1,14 @@
 package hr.hrg.watch.build.task;
 
+import java.nio.file.Path;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hr.hrg.watch.build.JsonMapper;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.JsCompConfig;
+import hr.hrg.watch.build.config.TaskDef;
 
 public class JsCompTaskFactory extends AbstractTaskFactory{
 	
@@ -14,7 +17,7 @@ public class JsCompTaskFactory extends AbstractTaskFactory{
 	}
 	
 	@Override
-	public void startOne(String inlineParam, String lang, JsonNode root, boolean watch) {
+	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
 		JsCompConfig config = mapper.convertValue(root, JsCompConfig.class);
 		
 		LangTask langTask = (LangTask) core.getTask(lang);
