@@ -14,6 +14,7 @@ import hr.hrg.watch.build.option.OptionParser;
 import hr.hrg.watch.build.option.YamlOptionParser;
 import hr.hrg.watch.build.task.CopyTaskFactory;
 import hr.hrg.watch.build.task.EnvTaskFactory;
+import hr.hrg.watch.build.task.ExtTaskFactory;
 import hr.hrg.watch.build.task.GzipTaskFactory;
 import hr.hrg.watch.build.task.HtmlScriptAndCssTaskFactory;
 import hr.hrg.watch.build.task.ImportTaskFactory;
@@ -116,6 +117,7 @@ public class Main {
 		factories.put("Copy", new CopyTaskFactory(watchBuild,mapper));
 		factories.put("Gzip", new GzipTaskFactory(watchBuild,mapper));
 		factories.put("Script", new ScriptTaskFactory(watchBuild,mapper));
+		factories.put("Ext", new ExtTaskFactory(watchBuild,mapper));
 		
 		// advanced tasks (in mini shaded bundle:  sass is not included at all, jsbundles works, but can not compile js)
 		factories.put("JsBundles", new JsBundlesTaskFactory(watchBuild,mapper));

@@ -367,7 +367,10 @@ public class WatchBuild {
 			lang = langs[0];
 		}
 		try {
-			if(vars.containsKey("burstDelay")) burstDelay = Long.parseLong(vars.get("burstDelay"));			
+			if(vars.containsKey("burstDelay")) {
+				burstDelay = Long.parseLong(vars.get("burstDelay"));
+				log.info("new burstDelay: "+burstDelay);
+			}
 		} catch (Exception e) {
 			log.error("Invalid value for burstDelay: "+vars.get("burstDelay"));
 		}

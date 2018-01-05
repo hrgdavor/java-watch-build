@@ -12,4 +12,5 @@ public class JsBundlesConfig{
 	public String compilationLevel = "SIMPLE";
 	public List<String> include = new ArrayList<>();
 	public List<String> exclude = new ArrayList<>();
+	public boolean perLanguage = true;
 }

@@ -306,7 +306,8 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 		private String buildFileName(String ext){
 			StringBuilder sb = new StringBuilder("bundle.").append(config.name);
-			sb.append(".").append(lang);
+			if(config.perLanguage)
+				sb.append(".").append(lang);
 			sb.append(".").append(ext);
 			return sb.toString();
 		}
