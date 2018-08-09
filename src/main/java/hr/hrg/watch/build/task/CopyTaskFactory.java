@@ -51,7 +51,13 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 			File f = core.getBasePath().resolve(config.input).toFile();
 			int i=0;
 			while(!f.exists() && i<config.altFolder.size()){
-				f = core.getBasePath().resolve(config.altFolder.get(i)).toFile();
+				
+				String alt = config.altFolder.get(i);
+				if(alt.startsWith("classpath:")) {
+					f = new File(alt);
+				}else {					
+					f = core.getBasePath().resolve(alt).toFile();
+				}
 				i++;
 			}
 			if(!f.exists()) throw new RuntimeException("Folder and alternatives do not exist "+config.input+" "+f.getAbsolutePath());
