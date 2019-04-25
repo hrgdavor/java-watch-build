@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -122,21 +121,28 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			int idxScript = html.indexOf(config.scriptReplace);
 			int idxCss = html.indexOf(config.cssReplace);
 			
+			long maxLastModifiedScript = 0;
+			
 			if(idxScript != -1) {
 				for(Object entry:scripts) {
 					if(entry instanceof ScriptEntry) {
 						ScriptEntry scriptEntry = (ScriptEntry) entry;
 						bScript.append("<script src=\"").append(scriptEntry.script)
 							.append("?__mt__=").append(scriptEntry.file.lastModified()).append("\"></script>\n");
-	
+						
+						maxLastModifiedScript = Math.max(maxLastModifiedScript, scriptEntry.file.lastModified());
+						
 					}else if(entry instanceof BundleEntry) {
 						BundleEntry bundle = (BundleEntry) entry;
 						if(bundle.lastModified < bundle.bundleFile.lastModified()) {
 							loadBundle(bundle);
 						}
+						maxLastModifiedScript = Math.max(maxLastModifiedScript, bundle.bundleFile.lastModified());
+						
 						for(JsInBundle js:bundle.scripts) {
 							bScript.append("<script src=\"").append(js.script)
-							.append("?__mt__=").append(js.modified).append("\"></script>\n");
+								.append("?__mt__=").append(js.modified).append("\"></script>\n");
+							maxLastModifiedScript = Math.max(maxLastModifiedScript, js.modified);
 						}
 					}else {
 						log.error("Unsupported script entry "+entry.getClass().getName());
@@ -148,9 +154,12 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				for(ScriptEntry js:cssScripts) {
 					bCss.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"").append(js.script)
 					.append("?__mt__=").append(js.file.lastModified()).append("\"></script>\n");
+					maxLastModifiedScript = Math.max(maxLastModifiedScript, js.file.lastModified());
+
 				}
 			}
 			
+			bScript.append("<script>").append("var APP_LAST_MODIFIED = ").append(maxLastModifiedScript).append(";</script>\n");
 			
 			Integer[] idx = new Integer[]{idxScript,idxCss};
 			Integer[] length = new Integer[]{config.scriptReplace.length(), config.cssReplace.length()};
@@ -173,6 +182,8 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			if(offset <html.length()) bHtml.append(html,offset,html.length());
 			if(!TaskUtils.writeFile(Paths.get(config.output), bHtml.toString().getBytes(), config.compareBytes, maxLastModified)){
 				log.trace("skip identical: "+config.output);			
+			}else {
+				TaskUtils.writeFile(Paths.get(config.output+".lastmodified"), Long.toString(maxLastModifiedScript).getBytes(), config.compareBytes, maxLastModified);
 			}
 		}
 	
