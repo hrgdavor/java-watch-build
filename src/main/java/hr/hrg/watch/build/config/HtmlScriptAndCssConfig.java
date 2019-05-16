@@ -9,6 +9,7 @@ public class HtmlScriptAndCssConfig{
 	public boolean compareBytes = true; 
 	public String scriptReplace = "<!--SCRIPT-FILES-->";
 	public String cssReplace = "<!--CSS-FILES-->";
+	public String lastModReplace = "<!--SCRIPT-LAST_MOD-->";
 	public List<String> scripts = new ArrayList<>(); 
 	public List<String> css = new ArrayList<>();
 

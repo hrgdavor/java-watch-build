@@ -6,7 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -106,6 +108,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	
 			StringBuilder bScript = new StringBuilder();
 			StringBuilder bCss = new StringBuilder();
+			StringBuilder bLastMod = new StringBuilder();
 			
 			
 			String html;
@@ -120,6 +123,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	
 			int idxScript = html.indexOf(config.scriptReplace);
 			int idxCss = html.indexOf(config.cssReplace);
+			int idxLastMod = html.indexOf(config.lastModReplace);
 			
 			long maxLastModifiedScript = 0;
 			
@@ -159,24 +163,29 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				}
 			}
 			
-			bScript.append("<script>").append("var APP_LAST_MODIFIED = ").append(maxLastModifiedScript).append(";</script>\n");
+			bLastMod.append("<script>").append("var APP_LAST_MODIFIED = ").append(maxLastModifiedScript).append(";</script>\n");
 			
-			Integer[] idx = new Integer[]{idxScript,idxCss};
-			Integer[] length = new Integer[]{config.scriptReplace.length(), config.cssReplace.length()};
-			String[] replace = new String[] {bScript.toString(), bCss.toString()};
+			ReplaceDef[] idx = new ReplaceDef[]{
+					new ReplaceDef(idxScript, config.scriptReplace, bScript),
+					new ReplaceDef(idxCss, config.cssReplace, bCss),
+					new ReplaceDef(idxLastMod, config.lastModReplace, bLastMod),
+					};
 			
-			if(idxScript>idxCss) {
-				flipArrays(idx,length,replace);
-			}
+			Arrays.sort(idx, new Comparator<ReplaceDef>() {
+				@Override
+				public int compare(ReplaceDef o1, ReplaceDef o2) {
+					return o1.idx - o2.idx;
+				}
+			});
 			
 			int offset = 0;
 			StringBuilder bHtml = new StringBuilder();
 			
 			for(int i=0; i<idx.length; i++) {
-				if(idx[i] == -1) continue;
-				bHtml.append(html,offset,idx[i]);
-				bHtml.append(replace[i]);
-				offset = idx[i]+length[i];
+				if(idx[i].idx == -1) continue;
+				bHtml.append(html,offset,idx[i].idx);
+				bHtml.append(idx[i].replace.toString());
+				offset = idx[i].idx + idx[i].search.length();
 			}
 			
 			if(offset <html.length()) bHtml.append(html,offset,html.length());
@@ -186,7 +195,25 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				TaskUtils.writeFile(Paths.get(config.output+".lastmodified"), Long.toString(maxLastModifiedScript).getBytes(), config.compareBytes, maxLastModified);
 			}
 		}
-	
+//	
+//		private void sortArrays(int[] idx, int[] length, String[] replace) {
+//			int[] pos = new int[idx.length];
+//			for(int i=0; i<pos.length; i++) {
+//				int min = idx[i];
+//				int minPos = i;
+//				for(int j=i; j<pos.length; j++) {
+//					if(idx[j] < min) {
+//						min = idx[j];
+//					}
+//				}
+//			}
+//			
+//			int[] idx1 = new int[idx.length];
+//			int[] length1 = new int[idx.length];
+//			int[] replace1 = new int[idx.length];
+//			for(int i=0; i<)
+//		}
+
 		private void loadBundle(BundleEntry bundle) {
 			try {
 				JsonNode node = mapper.readTree(bundle.bundleFile);
@@ -265,6 +292,18 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				}
 			}
 
+		}
+	}
+	
+	static class ReplaceDef{
+		private int idx;
+		private String search;
+		private StringBuilder replace;
+
+		public ReplaceDef(int idx, String search, StringBuilder replace) {
+			this.idx = idx;
+			this.search = search;
+			this.replace = replace;
 		}
 	}
 	static class BundleEntry{
