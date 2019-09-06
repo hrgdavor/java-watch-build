@@ -41,7 +41,10 @@ public class ExtTaskFactory extends AbstractTaskFactory {
 		}
 
 		ExtConfig config = mapper.convertValue(root, ExtConfig.class);
-
+		if(config.options == null) config.options = mapper.createObjectNode();
+		
+		config.options.put("verbose", Main.VERBOSE);
+		
 		ExtTask task = new ExtTask(core, mapper, config);
 		task.start(watch);
 
@@ -191,7 +194,10 @@ public class ExtTaskFactory extends AbstractTaskFactory {
 				String line = null;
 				while((line = br.readLine()) != null){
 					//b.append(line);
-					System.err.println(line);
+					if(line.startsWith("INFO "))
+						System.out.println(line);
+					else
+						System.err.println(line);
 				}
 				in.close();
 			}catch (Exception e) {
