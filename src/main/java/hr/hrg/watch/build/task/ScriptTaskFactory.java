@@ -58,7 +58,7 @@ public class ScriptTaskFactory extends AbstractTaskFactory{
 			if(config.initRun) {
 				Collection<Path> changed = config.initSendAll ? watcher.getMatchedFiles() : new ArrayList<>();
 				try {
-					Main.runScript(log, command, config.params, changed, config.sendChanges, System.out, System.err);
+					Main.runScript(java.util.logging.Logger.getLogger("ScriptTaskFactory"), command, config.params, changed, config.sendChanges, System.out, System.err);
 				} catch (Exception e) {
 					log.error("Error running script "+command, e);
 				}
@@ -72,7 +72,7 @@ public class ScriptTaskFactory extends AbstractTaskFactory{
 					if(changed == null) break; // interrupted
 					
 					try {
-						Main.runScript(log, command, config.params, changed, config.sendChanges, System.out, System.err);
+						Main.runScript(java.util.logging.Logger.getLogger("ScriptTaskFactory"), command, config.params, changed, config.sendChanges, System.out, System.err);
 					} catch (Exception e) {
 						log.error("Error running script "+command, e);
 					}

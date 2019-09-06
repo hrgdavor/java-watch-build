@@ -22,6 +22,7 @@ import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.javawatcher.WatchUtil;
 import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.ExtConfig;
@@ -96,7 +97,7 @@ public class ExtTaskFactory extends AbstractTaskFactory {
 				params = new String[]{ "/bin/sh","-c", WatchUtil.join(" ", params)};
 			}
 			try {
-				System.out.println(WatchUtil.join(" ", params));
+				if(Main.VERBOSE > 1) log.info("params: " +WatchUtil.join(" ", params));
 				proc = Runtime.getRuntime().exec(params);
 				
 				StreamGlobber glob = new StreamGlobber(proc.getErrorStream());
@@ -135,7 +136,7 @@ public class ExtTaskFactory extends AbstractTaskFactory {
 		private String sendPath(Path path, boolean initial) throws IOException {
 			Path toPath = toFolderPath.resolve(watcher.relativize(path));
 			String str = path.toFile().getAbsolutePath()+"\t"+toPath.toFile().getAbsolutePath()+"\t"+relativeToFolderPath.relativize(path)+"\t"+initial;
-			log.info("changed "+str);
+			if(Main.VERBOSE > 1) log.info("changed: "+str);
 			procOut.println(str);
 			procOut.flush();
 			return procIn.readLine();

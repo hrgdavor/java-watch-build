@@ -22,6 +22,7 @@ import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.SassBundlesConfig;
@@ -96,7 +97,7 @@ public class SassBundlesTaskFactory extends AbstractTaskFactory {
 					
 					// clear changed files from cache
 					for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
-						if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
+						if(Main.VERBOSE >1)	log.info("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
 					}
 					
 					genBundle();
@@ -182,9 +183,9 @@ public class SassBundlesTaskFactory extends AbstractTaskFactory {
 				writer.close();
 	
 				if(TaskUtils.writeFile(Paths.get(config.output), byteOutput.toByteArray(), config.compareBytes, maxLastModify)){
-					log.info("Generating "+config.output);
+					if(Main.VERBOSE >0)	log.info("Generating "+config.output);
 				}else{
-					log.trace("skip identical: "+config.output);
+					if(Main.VERBOSE >1)	log.info("skip identical: "+config.output);
 				}
 			} catch (Exception e) {
 				log.error("unable to write "+config.output,e);

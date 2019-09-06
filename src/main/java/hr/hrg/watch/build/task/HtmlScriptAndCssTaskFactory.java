@@ -144,8 +144,12 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 						maxLastModifiedScript = Math.max(maxLastModifiedScript, bundle.bundleFile.lastModified());
 						
 						for(JsInBundle js:bundle.scripts) {
-							bScript.append("<script src=\"").append(js.script)
-								.append("?__mt__=").append(js.modified).append("\"></script>\n");
+							bScript.append("<script src=\"");
+							
+							if(bundle.jsRoot != null && !bundle.jsRoot.isEmpty()) bScript.append(bundle.jsRoot).append("/");
+							
+							bScript.append(js.script);
+							bScript.append("?__mt__=").append(js.modified).append("\"></script>\n");
 							maxLastModifiedScript = Math.max(maxLastModifiedScript, js.modified);
 						}
 					}else {
@@ -219,6 +223,9 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				JsonNode node = mapper.readTree(bundle.bundleFile);
 				JsonNode filesNode = node.get("files");
 				bundle.scripts.clear();
+
+				if(node.hasNonNull("jsRoot")){ bundle.jsRoot = node.get("jsRoot").asText();	}
+				if(node.hasNonNull("srcRoot")){ bundle.srcRoot = node.get("srcRoot").asText(); }
 				
 				if(filesNode != null && !filesNode.isNull() && filesNode.isArray()) {
 					int count = filesNode.size();
@@ -308,6 +315,8 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 	}
 	static class BundleEntry{
 		public long lastModified;
+		public String jsRoot;
+		public String srcRoot;
 		public File bundleFile;
 		List<JsInBundle> scripts = new ArrayList<>();
 

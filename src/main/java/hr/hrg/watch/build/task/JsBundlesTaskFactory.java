@@ -24,11 +24,10 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 
-import hr.hrg.javawatcher.FileChangeEntry;
-import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.javawatcher.WatchUtil;
 import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
@@ -48,6 +47,14 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	@Override
 	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch){
 		JsBundlesConfig config = mapper.convertValue(root, JsBundlesConfig.class);
+		
+//		if(config.compareBytes == null) config.compareBytes = config.defaults.compareBytes;
+//		if(config.root == null) config.root = config.defaults.root;
+//		if(config.jsRoot == null) config.jsRoot = config.defaults.jsRoot;
+//		if(config.srcRoot == null) config.srcRoot = config.defaults.srcRoot;
+//		if(config.outputJS == null) config.outputJS = config.defaults.outputJS;
+//		if(config.outputText == null) config.outputText = config.defaults.outputText;
+//		if(config.compilationLevel == null) config.compilationLevel = config.defaults.compilationLevel;
 		
 		Task task = new Task(config, lang);
 		task.start(watch);
@@ -71,16 +78,17 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		
 		public void start(boolean watch) {
 			if(TaskUtils.isNoOutput(config.root)) return;
-					
-			rootPath = Paths.get(config.root);
 			
+			rootPath = Paths.get(config.root);			
 			watcher = new GlobWatcher(rootPath,true);
 	
 			File root = watcher.getRootPath().toFile();
+			
 			for(String inc:config.include){
 				if(inc.indexOf('*') == -1){
 					//exact path, check existence and report error if not present (very useful if it is a typo)
-					if(! new File(root,inc).exists()) core.logError(log,"Bundle:"+config.name+" File not found: "+inc);
+					File file =  new File(root,inc);
+					if(! file.exists()) core.logError(log,"Bundle:"+config.name+" File not found: "+inc+" "+file.getAbsolutePath());
 				}
 			}
 			
@@ -99,20 +107,20 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		public void run() {
 	
 			try {
-				Collection<FileChangeEntry<FileMatchGlob>> changed = null;
+				Collection<Path> changed = null;
 				while(!Thread.interrupted()){
 					
-					changed = watcher.takeBatch(core.getBurstDelay());
+					changed = watcher.takeBatchFilesUnique(core.getBurstDelay());
 					if(changed == null) break; // interrupted, thread should stop, stop the loop
 					
 					// clear changed files from cache
-					for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
-						if(log.isInfoEnabled()) {
-							long newModified = changeEntry.getPath().toFile().lastModified();
+					for (Path changeEntry : changed) {
+						if(Main.VERBOSE > 1){
+							long newModified = changeEntry.toFile().lastModified();
 							log.info("changed: "+changeEntry+" "+newModified);
 							if(newModified > maxLastModified) maxLastModified = newModified;
 						}
-						codeCache.remove(changeEntry.getPath());
+						codeCache.remove(changeEntry);
 					}
 					
 					genBundle();
@@ -124,7 +132,6 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		
 		private void genBundle() {
 			if(TaskUtils.isNoOutput(config.root)) return;
-			
 			
 			List<PathWithWeight> paths = new ArrayList<JsBundlesTaskFactory.PathWithWeight>();
 			
@@ -171,6 +178,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 		private void fillFromBundle(List<PathWithWeight> pathsToBuild, Path bundleFile, int weight) {
 			try {
+				System.err.println("Bundle file "+bundleFile.toFile().getCanonicalPath());
 				JsonNode bundle = mapper.readTree(bundleFile.toFile());
 				ArrayNode files = (ArrayNode) bundle.get("files");
 				for(JsonNode scriptNode: files) {
@@ -210,7 +218,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				}
 				level.setOptionsForCompilationLevel(options);
 				
-				Path rootPath = watcher.getRootPath();
+				Path jsPath = watcher.getRootPath();
 				
 				// To get the complete set of externs, the logic in
 			    // CompilerRunner.getDefaultExterns() should be used here.
@@ -252,7 +260,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				}else{
 					log.trace("skip identical: "+outputJS);
 				}
-				
+
 			} catch (Exception e) {
 				log.error("unable to write "+outputJS,e);
 				if(writer != null)  writer.close();
@@ -267,16 +275,17 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 				writer = new PrintWriter(new OutputStreamWriter(byteOutput));
 	
-				writer.write("{\"name\":\""+config.name+"\",\"files\":[");
+				writer.write("{\"name\":\""+config.name+"\"");
+				writer.write(",\"files\":[");
 				boolean first = true;
-				Path rootPath = watcher.getRootPath();
+				Path jsPath = watcher.getRootPath();
 				long totalSize = 0;
 				for(PathWithWeight pw:paths){
 					if(!first){
 						writer.write(',');
 					}
 					writer.write("{\"script\":\"");
-					writer.write(rootPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
+					writer.write(jsPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
 					writer.write("\"");
 					File file = pw.path.toFile();
 					writer.write(",\"modified\":"+file.lastModified());
@@ -321,9 +330,9 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 				writer = new PrintWriter(new OutputStreamWriter(byteOutput));
 	
-				Path rootPath = watcher.getRootPath();
+				Path jsPath = watcher.getRootPath();
 				for(PathWithWeight pw:paths){
-					writer.println(rootPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
+					writer.println(jsPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
 				}
 				writer.close();
 	

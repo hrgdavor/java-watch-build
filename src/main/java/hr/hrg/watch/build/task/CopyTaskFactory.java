@@ -15,6 +15,7 @@ import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.CopyConfig;
@@ -74,7 +75,7 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 			Collection<Path> files = watcher.getMatchedFiles();
 			for (Path file : files) {
 				Path toFile = toPath.resolve(watcher.relativize(file));
-				copyFile(file, toFile);
+				copyFile(file, toFile, true);
 			}
 		}
 	
@@ -89,10 +90,10 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 						
 						if(path.toFile().isDirectory()) continue;
 						
-						log.info("changed:"+entry+" "+path.toFile().lastModified());
+						if(Main.VERBOSE > 1) log.info("changed:"+entry+" "+path.toFile().lastModified());
 						
 						Path toFile = toPath.resolve(watcher.relativize(path));
-						copyFile(path, toFile);
+						copyFile(path, toFile, false);
 					}
 				}
 				
@@ -102,7 +103,7 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 		}
 	
 		
-		protected boolean copyFile(Path from, Path to){
+		protected boolean copyFile(Path from, Path to, boolean initial){
 			File fromFile = from.toFile();
 			File toFile = to.toFile();
 			boolean shouldCopy = 
@@ -121,12 +122,14 @@ public class CopyTaskFactory extends AbstractTaskFactory{
 				}
 			}
 	
-			if(shouldCopy && TaskUtils.writeFile(to, newBytes, config.compareBytes, fromFile.lastModified())){			
-				log.info("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
+			if(shouldCopy && TaskUtils.writeFile(to, newBytes, config.compareBytes, fromFile.lastModified())){
+				// initially log only iv VERBOSE 2+ ... on change print if VERBOSE 1+
+				if((initial && Main.VERBOSE > 1) || (!initial && Main.VERBOSE > 0)) 
+					log.info("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
 				return true;
 			}else{
 				if(shouldCopy) {
-					log.trace("skip identical: "+to);
+					if(Main.VERBOSE > 1) log.info("skip identical: "+to);
 					if(config.reverseSyncModified && config.compareBytes && fromFile.lastModified() > toFile.lastModified()) {
 						fromFile.setLastModified(toFile.lastModified());
 					}

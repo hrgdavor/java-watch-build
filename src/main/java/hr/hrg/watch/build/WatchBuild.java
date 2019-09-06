@@ -25,6 +25,7 @@ import hr.hrg.watch.build.config.TaskOption;
 import hr.hrg.watch.build.option.OptionParser;
 import hr.hrg.watch.build.task.TaskFactory;
 import hr.hrg.watch.build.task.VarTaskFactory;
+import hr.hrg.watchsass.Compiler;
 
 public class WatchBuild {
 
@@ -119,9 +120,17 @@ public class WatchBuild {
 		dryRun = false;
 
 		for(int i=1; i<args.length; i++) {
-			if("--watch".equals(args[i])) watch = true;
-			else if("--dry-run".equals(args[i])) dryRun = true;
+			if("--watch".equals(args[i])) 
+				watch = true;
+			else  if("-v".equals(args[i])) 
+				Main.VERBOSE = 1;
+			else  if("-vv".equals(args[i])) 
+				Main.VERBOSE = 2;
+			else  if("--dry-run".equals(args[i])) 
+				dryRun = true;
 		}
+		
+		Compiler.VERBOSE = Main.VERBOSE;
 		
 		runBuild(args[0]);
 		if(!watch) return;

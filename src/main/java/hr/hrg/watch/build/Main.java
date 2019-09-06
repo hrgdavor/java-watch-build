@@ -31,6 +31,8 @@ import hr.hrg.watch.build.task.VarTaskFactory;
 
 public class Main {
 
+	public static int VERBOSE = 0;
+	
 	public static void main(String[] args) {
 		if(args.length == 0) printHelp();
 		System.setProperty("file.encoding","UTF-8");
@@ -145,6 +147,8 @@ public class Main {
 		System.out.println("\t conf      - configuration file in yml format (requires profile and lang)");
 		System.out.println("\t script    - javascript script that will be executed using nashorn");
 		System.out.println("\t --watch   - continue watching after build");
+		System.out.println("\t -v        - verbose level 1");
+		System.out.println("\t -vv       - verbose level 2");
 		System.out.println("\t --dry-run - show final configuration for checking the end result is what was intended");
 		System.exit(0);
 	}

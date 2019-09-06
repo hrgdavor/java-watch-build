@@ -16,6 +16,7 @@ import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.GzipConfig;
 import hr.hrg.watch.build.config.TaskDef;
@@ -62,7 +63,7 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 			this.watcher.init(watch);
 			Collection<Path> files = watcher.getMatchedFiles();
 			for (Path path : files) {
-				compressFile(path, gzPath(path));
+				compressFile(path, gzPath(path), true);
 			}
 		}
 
@@ -81,9 +82,9 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 						
 						if(path.toFile().isDirectory()) continue;
 						
-						log.info("changed:"+entry+" "+path.toFile().lastModified());
+						if(Main.VERBOSE > 1) log.info("changed:"+entry+" "+path.toFile().lastModified());
 						
-						compressFile(path, gzPath(path));
+						compressFile(path, gzPath(path), false);
 					}
 				}
 				
@@ -93,7 +94,7 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 		}
 	
 		
-		protected boolean compressFile(Path from, Path to){
+		protected boolean compressFile(Path from, Path to, boolean initial){
 			File fromFile = from.toFile();
 			File toFile = to.toFile();
 			boolean shouldCopy = !toFile.exists() || fromFile.lastModified() > toFile.lastModified();
@@ -106,11 +107,13 @@ public class GzipTaskFactory extends AbstractTaskFactory{
 				} catch (Exception e) {
 					log.error("ERROR generating gzip ",e);
 				}
-				log.info("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
+				
+				if((initial && Main.VERBOSE > 1) || (!initial && Main.VERBOSE > 0)) 
+					log.info("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
 				toFile.setLastModified(fromFile.lastModified());
 				return true;
 			}else{
-				log.trace("skip already generated: "+to);		
+				if(Main.VERBOSE > 1) log.info(" skip already generated: "+to);
 				return false;
 			}
 		}
