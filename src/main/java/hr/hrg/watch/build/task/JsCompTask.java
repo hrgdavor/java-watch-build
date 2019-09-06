@@ -20,6 +20,7 @@ import hr.hrg.javawatcher.FileChangeEntry;
 import hr.hrg.javawatcher.FileMatchGlob;
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.LanguageChangeListener;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.VarExpander;
 import hr.hrg.watch.build.config.JsCompConfig;
@@ -145,7 +146,7 @@ public class JsCompTask implements LanguageChangeListener, Runnable{
 			log.info("generated:      "+to);
 			return true;
 		}else{
-			log.trace("skip identical: "+to);			
+			if(Main.VERBOSE > 1) log.trace("skip identical: "+to);			
 			return false;
 		}
 	}

@@ -258,7 +258,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 					log.info("Generating "+options.sourceMapOutputPath+" DONE "+(System.currentTimeMillis()-start)+"ms");	
 					
 				}else{
-					log.trace("skip identical: "+outputJS);
+					if(Main.VERBOSE > 1) log.trace("skip identical: "+outputJS);
 				}
 
 			} catch (Exception e) {
@@ -304,7 +304,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 					log.info("Generating "+output);
 					outputPath.toFile().setLastModified(maxLastModified);
 				}else{
-					log.trace("skip identical: "+output);
+					if(Main.VERBOSE > 1) log.trace("skip identical: "+output);
 				}
 	
 			} catch (Exception e) {
@@ -339,7 +339,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
 					log.info("Generating "+outputText);
 				}else{
-					log.trace("skip identical: "+outputText);
+					if(Main.VERBOSE > 1) log.trace("skip identical: "+outputText);
 				}
 			} catch (Exception e) {
 				log.error("unable to write "+outputText,e);

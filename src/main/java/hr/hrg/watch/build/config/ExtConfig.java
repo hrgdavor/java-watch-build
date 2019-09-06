@@ -3,6 +3,9 @@ package hr.hrg.watch.build.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import wrm.libsass.SassCompiler.InputSyntax;
 import wrm.libsass.SassCompiler.OutputStyle;
 
@@ -16,7 +19,7 @@ public class ExtConfig {
 	public String cmd;
 	public String[] params = {};
 	
-	public Object options;
+	public ObjectNode options;
 	public String relative;
 	
 }

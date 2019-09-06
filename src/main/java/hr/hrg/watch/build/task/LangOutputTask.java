@@ -24,6 +24,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.LanguageChangeListener;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.LangOutputConfig;
@@ -224,7 +225,7 @@ public class LangOutputTask implements Runnable, LanguageChangeListener{
 			log.info("Generating "+to);
 			return true;
 		}else{
-			log.trace("skip identical: "+to);
+			if(Main.VERBOSE > 1) log.trace("skip identical: "+to);
 			return false;
 		}
 	}

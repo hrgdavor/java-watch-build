@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.watch.build.JsonMapper;
+import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.HtmlScriptAndCssConfig;
@@ -194,7 +195,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			
 			if(offset <html.length()) bHtml.append(html,offset,html.length());
 			if(!TaskUtils.writeFile(Paths.get(config.output), bHtml.toString().getBytes(), config.compareBytes, maxLastModified)){
-				log.trace("skip identical: "+config.output);			
+				if(Main.VERBOSE > 1) log.trace("skip identical: "+config.output);			
 			}else {
 				TaskUtils.writeFile(Paths.get(config.output+".lastmodified"), Long.toString(maxLastModifiedScript).getBytes(), config.compareBytes, maxLastModified);
 			}
