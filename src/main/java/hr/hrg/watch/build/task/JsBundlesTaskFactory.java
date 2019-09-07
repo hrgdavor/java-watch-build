@@ -32,6 +32,7 @@ import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.JsBundlesConfig;
+import hr.hrg.watch.build.config.JsBundlesConfig.BundleEntry;
 import hr.hrg.watch.build.config.TaskDef;
 
 public class JsBundlesTaskFactory extends AbstractTaskFactory {
@@ -56,10 +57,12 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 //		if(config.outputText == null) config.outputText = config.defaults.outputText;
 //		if(config.compilationLevel == null) config.compilationLevel = config.defaults.compilationLevel;
 		
-		Task task = new Task(config, lang);
-		task.start(watch);
-		if(watch)
-			core.addThread(new Thread(task,"JsBundle:"+config.name+"-to-"+config.root));
+		for(BundleEntry bundle:config.bundles) {			
+			Task task = new Task(config, bundle, lang);
+			task.start(watch);
+			if(watch)
+				core.addThread(new Thread(task,"JsBundle:"+bundle.name+"-to-"+config.root));
+		}
 	}
 
 	class Task implements Runnable{
@@ -69,9 +72,11 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		GlobWatcher watcher;
 		private String lang;
 		private long maxLastModified;
+		private BundleEntry bundle;
 
-		Task(JsBundlesConfig config, String lang){
+		Task(JsBundlesConfig config, BundleEntry bundle, String lang){
 			this.config = config;
+			this.bundle = bundle;
 			this.lang = lang;
 			
 		}
@@ -84,16 +89,16 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 			File root = watcher.getRootPath().toFile();
 			
-			for(String inc:config.include){
+			for(String inc:bundle.include){
 				if(inc.indexOf('*') == -1){
 					//exact path, check existence and report error if not present (very useful if it is a typo)
 					File file =  new File(root,inc);
-					if(! file.exists()) core.logError(log,"Bundle:"+config.name+" File not found: "+inc+" "+file.getAbsolutePath());
+					if(! file.exists()) core.logError(log,"Bundle:"+bundle.name+" File not found: "+inc+" "+file.getAbsolutePath());
 				}
 			}
 			
-			watcher.includes(config.include);
-			watcher.excludes(config.exclude);
+			watcher.includes(bundle.include);
+			watcher.excludes(bundle.exclude);
 			
 			// when input watcher is started, all matchers that were added to it are 
 			// filled with files found that are (included + not excluded)
@@ -144,7 +149,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 					if(includes.get(i).matches(path)){
 						// weight is the first rule that matches the path
 						// rule without wildcards (exact path) has priority to enable putting some files to end of the list
-						if(weight == -1 || config.include.get(i).indexOf('*') == -1){
+						if(weight == -1 || bundle.include.get(i).indexOf('*') == -1){
 							weight = i;
 						}
 					}
@@ -275,7 +280,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 				ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 				writer = new PrintWriter(new OutputStreamWriter(byteOutput));
 	
-				writer.write("{\"name\":\""+config.name+"\"");
+				writer.write("{\"name\":\""+bundle.name+"\"");
 				writer.write(",\"files\":[");
 				boolean first = true;
 				Path jsPath = watcher.getRootPath();
@@ -314,7 +319,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 		}
 	
 		private String buildFileName(String ext){
-			StringBuilder sb = new StringBuilder("bundle.").append(config.name);
+			StringBuilder sb = new StringBuilder("bundle.").append(bundle.name);
 			if(config.perLanguage)
 				sb.append(".").append(lang);
 			sb.append(".").append(ext);
