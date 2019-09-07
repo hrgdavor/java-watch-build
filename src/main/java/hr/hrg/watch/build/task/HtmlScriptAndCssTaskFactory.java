@@ -59,6 +59,8 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 		
 		public Task(HtmlScriptAndCssConfig config, Path outputRoot){
 			this.config = config;
+			if(config.scriptVariable != null && config.scriptVariable.isEmpty()) config.scriptVariable = null;
+			
 			if(outputRoot == null) throw new NullPointerException("outputRoot can not be null");
 			
 			scriptRoot = TaskUtils.getFolder(outputRoot.resolve(config.output).toFile());
@@ -104,7 +106,18 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 				genHtml(file);
 			}
 		}
-	
+
+		private void appendScript(StringBuilder bScript, String script, long lastModified) {
+			if(config.scriptVariable == null) {				
+				bScript.append("<script src=\"").append(script)
+					.append("?__mt__=").append(lastModified).append("\"></script>\n");
+			}else {
+				bScript.append("[\"").append(script).append("\",")
+				.append(lastModified).append("]");
+			}
+		}
+
+
 		private void genHtml(Path file) {
 	
 			StringBuilder bScript = new StringBuilder();
@@ -129,12 +142,20 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 			long maxLastModifiedScript = 0;
 			
 			if(idxScript != -1) {
+				boolean first = true;
+
+				if(config.scriptVariable != null) {
+					bScript.append("<script>\nvar ").append(config.scriptVariable).append(" = [\n");
+				}
+
 				for(Object entry:scripts) {
+					
 					if(entry instanceof ScriptEntry) {
 						ScriptEntry scriptEntry = (ScriptEntry) entry;
-						bScript.append("<script src=\"").append(scriptEntry.script)
-							.append("?__mt__=").append(scriptEntry.file.lastModified()).append("\"></script>\n");
-						
+						if(!first) bScript.append(",\n");
+						appendScript(bScript, scriptEntry.script, scriptEntry.file.lastModified());
+						first = false;
+
 						maxLastModifiedScript = Math.max(maxLastModifiedScript, scriptEntry.file.lastModified());
 						
 					}else if(entry instanceof BundleEntry) {
@@ -145,12 +166,15 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 						maxLastModifiedScript = Math.max(maxLastModifiedScript, bundle.bundleFile.lastModified());
 						
 						for(JsInBundle js:bundle.scripts) {
-							bScript.append("<script src=\"");
 							
-							if(bundle.jsRoot != null && !bundle.jsRoot.isEmpty()) bScript.append(bundle.jsRoot).append("/");
+							StringBuffer src = new StringBuffer();
+							if(bundle.jsRoot != null && !bundle.jsRoot.isEmpty()) src.append(bundle.jsRoot).append("/");
+							src.append(js.script);
 							
-							bScript.append(js.script);
-							bScript.append("?__mt__=").append(js.modified).append("\"></script>\n");
+							if(!first) bScript.append(",\n");
+							appendScript(bScript, src.toString(), js.modified);
+							first = false;
+							
 							maxLastModifiedScript = Math.max(maxLastModifiedScript, js.modified);
 						}
 					}else {
@@ -158,6 +182,11 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory{
 					}
 				}
 			}
+			
+			if(config.scriptVariable != null) {
+				bScript.append("\n];\n</script>\n");
+			}
+			
 	
 			if(idxCss != -1) {
 				for(ScriptEntry js:cssScripts) {
