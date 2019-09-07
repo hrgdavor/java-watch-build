@@ -178,7 +178,7 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory {
 	
 		private void fillFromBundle(List<PathWithWeight> pathsToBuild, Path bundleFile, int weight) {
 			try {
-				System.err.println("Bundle file "+bundleFile.toFile().getCanonicalPath());
+				if(Main.VERBOSE  > 1) log.trace("Bundle file "+bundleFile.toFile().getCanonicalPath());
 				JsonNode bundle = mapper.readTree(bundleFile.toFile());
 				ArrayNode files = (ArrayNode) bundle.get("files");
 				for(JsonNode scriptNode: files) {

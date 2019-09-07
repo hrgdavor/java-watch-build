@@ -30,6 +30,9 @@ import hr.hrg.watch.build.config.TaskDef;
 
 public class ExtTaskFactory extends AbstractTaskFactory {
 
+
+	private static final Logger log = LoggerFactory.getLogger(ExtTaskFactory.class);
+	
 	public ExtTaskFactory(WatchBuild core, JsonMapper mapper){
 		super(core, mapper);
 	}
@@ -195,7 +198,7 @@ public class ExtTaskFactory extends AbstractTaskFactory {
 				while((line = br.readLine()) != null){
 					//b.append(line);
 					if(line.startsWith("INFO "))
-						System.out.println(line);
+						log.info(line.substring(5));
 					else
 						System.err.println(line);
 				}
