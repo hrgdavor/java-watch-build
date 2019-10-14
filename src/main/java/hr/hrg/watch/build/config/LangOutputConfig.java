@@ -9,3 +9,5 @@ public class LangOutputConfig{
 	public boolean compareBytes = true;
 	public List<String> output = new ArrayList<>();
 }
+
+
