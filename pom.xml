@@ -11,7 +11,7 @@
 	<url>http://github.com/hrgdavor/java-watch-build</url>
 
 	<properties>
-		<jackson-version>2.7.0</jackson-version>
+		<jackson-version>2.10.0</jackson-version>
 		<app.main.class>hr.hrg.watch.build.Main</app.main.class>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jetty-version>9.3.16.v20170120</jetty-version>
