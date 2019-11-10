@@ -1,42 +1,36 @@
 package hr.hrg.watch.build.task;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import static hr.hrg.watch.build.TaskUtils.*;
 
-import hr.hrg.watch.build.JsonMapper;
+import java.util.List;
+
+import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
-import hr.hrg.watch.build.config.ConfigException;
 import hr.hrg.watch.build.config.LangConfig;
-import hr.hrg.watch.build.config.TaskDef;
 
-public class LangTaskFactory extends AbstractTaskFactory{
-	
-	private YAMLMapper yamlMapper;
-	
-	public LangTaskFactory(WatchBuild core, JsonMapper mapper, YAMLMapper yamlMapper){
-		super(core, mapper);
-		this.yamlMapper = yamlMapper;
+public class LangTaskFactory extends AbstractTaskFactory<LangTask, LangConfig>{
+
+	public LangTaskFactory(WatchBuild core){
+		super(core,new LangConfig());
 	}
 	
-	@Override
-	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
-		LangConfig config = mapper.convertValue(root, LangConfig.class);
-
-		if(lang == null) throw new ConfigException("Language task can not run without 'lang' in the enviroment", null); 
-		LangTask task = new LangTask(config, core, core.getOutputRoot(),yamlMapper, mapper);
-
-		core.registerTask(lang, task);
-	
-		task.start(watch);
-
-		if(watch)
-			core.addThread(new Thread(task,"Language:"+config.input));
-
+	public LangTaskFactory(WatchBuild core, String ...input) {
+		super(core,new LangConfig());
+		TaskUtils.addAll(config.input, input);
 	}
 
 	@Override
-	public String getDefaultOptionParser() {
-		return "YamlPerLanguage";
-	}	
+	public LangTask build() {
+		return new LangTask(config, core);
+	}
+	
+	public LangTaskFactory varName(String varName) { config.varName = varName; return this; }
+
+	public LangTaskFactory output(String ...arr) { addAll(config.output, arr); return this; }
+	public LangTaskFactory output(List<String> list) { config.output.addAll(list); return this; }
+	
+	public LangTaskFactory compareBytes(boolean val) { config.compareBytes = val; return this; }
+	public LangTaskFactory compareBytes() { config.compareBytes = true; return this; }
+	
 	
 }

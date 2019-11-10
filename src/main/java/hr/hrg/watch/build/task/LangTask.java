@@ -1,8 +1,10 @@
 package hr.hrg.watch.build.task;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,65 +15,54 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import hr.hrg.javawatcher.GlobWatcher;
-import hr.hrg.watch.build.LanguageChangeListener;
+import hr.hrg.watch.build.Main;
+import hr.hrg.watch.build.TaskUtils;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.LangConfig;
 
-public class LangTask implements Runnable{
+public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 
-	Logger log = LoggerFactory.getLogger(LangTask.class);
 
 	protected GlobWatcher folderWatcher;
 	
 	public static final int BUFFER_SIZE = 4096;
-	private List<LanguageChangeListener> listeners = new ArrayList<>();
+	private Path root;
 	
-	private Map<String , String> trans = new HashMap<>();
 	private long maxLastModified;
-	private ObjectMapper objectMapper;
-	private YAMLMapper yamlMapper;
 
-	private List<Path> langFiles = new ArrayList<>();
+	private Map<String, Map<String,String>> cache = new HashMap<>();
 	
-	private WatchBuild core;
+	private List<File> inputs = new ArrayList<>();
 
-
-	public LangTask(LangConfig config, WatchBuild core, Path root, YAMLMapper yamlMapper, ObjectMapper objectMapper){
-		this.core = core;
-		this.yamlMapper = yamlMapper;
-		this.objectMapper = objectMapper;
+	public LangTask(LangConfig config, WatchBuild core){
+		super(config, core);
+		this.root = core.getOutputRoot();
 		
-		Path inputRoot = core.getBasePath();
-		
-		folderWatcher = new GlobWatcher(inputRoot, true);
-		for(String fileName: config.input) {
-			Path path = inputRoot.resolve(fileName);
-			File f = path.toFile();
-			if(!f.exists()) throw new RuntimeException("Input file does not exist "+inputRoot+" + "+fileName+" -> "+f.getAbsolutePath());
-			
-			long mod = f.lastModified();
-			if(mod > maxLastModified) maxLastModified = mod;
-			
-			langFiles.add(path);
-			folderWatcher.includes(fileName);
-		}		
 	}
+	
+	public void init(boolean watch){
+		
+		folderWatcher = new GlobWatcher(root, true);
+		
+		folderWatcher.includes(config.input);
+		
+		for(String output: config.output) {
+			File file = root.resolve(output).toFile();
+			if(file.exists()){
+				maxLastModified = Math.max(file.lastModified(), maxLastModified);
+			}
+		}
+		
+		for(String input: config.input) {
+			inputs.add(root.resolve(input).toFile());
+		}
 
-	public void start(boolean watch){
+		
 		folderWatcher.init(watch);		
-		notifyListeners(false);
-	}
-
-	public Map<String, String> getTrans() {
-		return trans;
+		genFiles();
 	}
 
 	public void run(){
@@ -81,95 +72,117 @@ public class LangTask implements Runnable{
 				if(changes == null) break; // null means interrupted, and we should end this loop
 				
 				for (Path changeEntry : changes) {
-					if(log.isInfoEnabled())	log.info("changed: "+changeEntry+" "+changeEntry.toFile().lastModified());
-					long mod = changeEntry.toFile().lastModified();
-					if(mod > maxLastModified) maxLastModified = mod;
+					File file = changeEntry.toFile();
+					if(Main.VERBOSE >0)	Main.logInfo("changed: "+changeEntry+" "+file.lastModified());
+					cache.remove(file.getAbsolutePath());
+					long mod = file.lastModified();
+					if(mod > maxLastModified) maxLastModified = mod;	
 				}
-
-				notifyListeners(true);
+				genFiles();
 			}
 		} finally {
 			folderWatcher.close();
 		}
 	}
 
-	protected boolean notifyListeners(boolean notify){
-		Update update = this.updateLanguage();
+	protected boolean genFiles(){
+		Map<String, String> trans = new HashMap<>();
 		
-		if(update.changes.size() == 0 && update.removed.size() == 0){
-			log.trace("No translations changed");
-			return false;
-		}
-		this.maxLastModified = update.lastModified;
-		
-		if(!notify) return true;
-
-		for(LanguageChangeListener listener: listeners){
-			try {
-				listener.languageChanged(update);
-			} catch (Exception e) {
-				e.printStackTrace();
+		for(File input:inputs) {
+			Map<String, String> tmp = getTrans(input);
+			for(Entry<String, String> entry:tmp.entrySet()) {
+				trans.put(entry.getKey(), entry.getValue());
 			}
+		}
+
+		if(config.output != null){
+			for(String out: config.output){
+				this.genFile(trans, root.resolve(out));
+			}			
 		}
 		return true;
 	}
 
-	private Update updateLanguage() {
-		Map<String, String> changes = new HashMap<>();
-		Map<String, String> removed = new HashMap<>();
-		Map<String, String> newTrans = new HashMap<>();
-		long lastModified = 0;
-		
-		for(Path from:langFiles) {
-			String fileName = from.getFileName().toString();
-			
-			// calc max maxLastModified
-			long tmp = from.toFile().lastModified();
-			if(tmp > lastModified) lastModified = tmp;
-			
-			if(fileName.endsWith(".properties")){
-				fromProperties(newTrans,from);
-			}else if(fileName.endsWith(".json")){
-				fromJson(newTrans, from);
-			}else if(fileName.endsWith(".yml") || fileName.endsWith(".yaml")){
-				fromYaml(newTrans, from);
-			}else{
-				throw new RuntimeException("File type not supported "+fileName+" "+from);
-			}			
-		}
-		
-		for(Entry<String, String> e:newTrans.entrySet()){
-			if(trans.containsKey(e.getKey())){
-				if(!compStr(e.getValue(),trans.get(e.getKey()))){
-					changes.put(e.getKey(), e.getValue());
-				}
-			}else{
-				//added
-				changes.put(e.getKey(), e.getValue());
+	private Map<String, String> getTrans(File input) {
+		Map<String, String> trans = cache.get(input.getAbsolutePath());
+		if(trans == null) {
+			trans = new HashMap<>();
+			String name = input.getName();
+			if(name.endsWith(".yml") || name.endsWith(".yaml")) {
+				fromYaml(trans, input);
+			}else if(name.endsWith(".properties")) {
+				fromProperties(trans, input);
+			}else if(name.endsWith(".json")) {
+				fromJson(trans, input);
 			}
 		}
-
-		for(Entry<String, String> e:trans.entrySet()){
-			if(!newTrans.containsKey(e.getKey())){
-				removed.put(e.getKey(), e.getValue());
-			}
-		}
-
-		trans = newTrans;
-		
-		return new Update(newTrans, changes, removed, lastModified);
+		return trans;
 	}
 
-	private boolean compStr(String a, String b){
-		if(a == null && b==null) return true;
-		if(a==null || b == null) return false;
-		return a.equals(b);
-	}
-	
-	private void fromProperties(Map<String, String> newTrans, Path from) {
+	private void genProperties(Map<String, String> newTrans, OutputStream out) {
 		Properties prop = new Properties();
 		try {
-			prop.load(new FileReader(from.toFile()));
+			for(Entry<String, String> e: newTrans.entrySet()){
+				prop.setProperty(e.getKey(), e.getValue());
+			}
+			prop.store(out,null);
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void genJson(Map<String, String> newTrans, OutputStream out) {
+		try {
+			core.getMapper().writeValue(out,newTrans);			
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void genJs(Map<String, String> newTrans, OutputStream out) {
+		try {
+			out.write(("var "+config.varName+" = ").getBytes());
+			core.getMapper().writeValue(out,newTrans);	
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	
+	protected boolean genFile(Map<String, String> newTrans, Path to){
+		String fileName = to.getFileName().toString();
+
+		File file = to.toFile();
+		if(file.exists() && file.lastModified() > maxLastModified) {
+			if(Main.VERBOSE > 1) Main.logInfo("skip older: "+to);			
+		}
+
+		ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+		
+		if(fileName.endsWith(".properties")){
+			genProperties(newTrans,byteOutput);
+		}else if(fileName.endsWith(".json")){
+			genJson(newTrans, byteOutput);
+		}else if(fileName.endsWith(".js")){
+			genJs(newTrans, byteOutput);
+		}else{
+			throw new RuntimeException("File type not supported "+to);
+		}
+		
+		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
+			Main.logInfo("Generating "+to);
+			return true;
+		}else{
+			if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+to);
+			return false;
+		}
+	}
+
+	
+	private void fromProperties(Map<String, String> newTrans, File from) {
+		Properties prop = new Properties();
+		try {
+			prop.load(new FileReader(from));
 			for(String propName: prop.stringPropertyNames()){
 				newTrans.put(propName, prop.getProperty(propName));
 			}
@@ -178,9 +191,9 @@ public class LangTask implements Runnable{
 		}
 	}
 
-	private void fromJson(Map<String, String> newTrans, Path from) {
+	private void fromJson(Map<String, String> newTrans, File from) {
 		try {
-			JsonNode tree = objectMapper.readTree(from.toFile());
+			JsonNode tree = core.getMapper().readTree(from);
 			
 			Iterator<Entry<String, JsonNode>> fields = tree.fields();
 			while(fields.hasNext()){
@@ -193,9 +206,9 @@ public class LangTask implements Runnable{
 		}
 	}
 
-	private void fromYaml(Map<String, String> newTrans, Path from) {
+	private void fromYaml(Map<String, String> newTrans, File from) {
 		try {
-			JsonNode tree = yamlMapper.readTree(from.toFile());
+			JsonNode tree = core.getYamlMapper().readTree(from);
 			
 			Iterator<Entry<String, JsonNode>> fields = tree.fields();
 			while(fields.hasNext()){
@@ -208,42 +221,8 @@ public class LangTask implements Runnable{
 		}
 	}
 	
-	public static class Update{
-		private Map<String, String> newTrans;
-		private Map<String, String> changes;
-		private Map<String, String> removed;
-		private long lastModified;
-
-		public Update(Map<String, String> newTrans, Map<String, String> changes, Map<String, String> removed, long lastModified) {
-			this.newTrans = newTrans;
-			this.changes = changes;
-			this.removed = removed;
-			this.lastModified = lastModified;
-		}
-		
-		public long getLastModified() {
-			return lastModified;
-		}
-		
-		public Map<String, String> getNewTrans() {
-			return newTrans;
-		}
-
-		public Map<String, String> getChanges() {
-			return changes;
-		}
-
-		public Map<String, String> getRemoved() {
-			return removed;
-		}
-
+	@Override
+	public String toString() {
+		return "LanguageOutput:"+config.output;
 	}
-
-	public void addLanguageChangeListener(LanguageChangeListener listener) {
-		listeners.add(listener);
-	}
-	
-	public long lastModified() {
-		return maxLastModified;
-	}	
 }

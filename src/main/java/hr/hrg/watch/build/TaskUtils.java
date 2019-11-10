@@ -7,17 +7,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-
-import hr.hrg.watch.build.option.OptionException;
 
 public class TaskUtils {
 	public static final int BUFFER_SIZE = 4096;
@@ -109,10 +105,6 @@ public class TaskUtils {
 		return file.getParent();
 	}
 
-	public static boolean isNoOutput(String dest) {
-		return dest == null || "".equals(dest) || dest.startsWith("/dev/null");
-	}
-
 	public static boolean emptyOrcomment(String trimmed) {
 		return trimmed.isEmpty() || trimmed.charAt(0) == '#';
 	}
@@ -127,32 +119,6 @@ public class TaskUtils {
 		return ret;
 	}
 
-	public static final JsonNode expandVars(JsonNode node, VarMap vars) {
-		
-		if(node.isArray()){
-			int count = node.size();
-			ArrayNode arr = (ArrayNode) node;
-			for(int i=0; i<count; i++){
-				if(node.get(i).isTextual()){
-					arr.set(i, new TextNode(vars.expand(arr.get(i).asText())));
-				}else	
-					expandVars(node.get(i), vars);
-			}
-		}else if(node.isObject()){
-			ObjectNode obj = (ObjectNode) node;
-			Iterator<Entry<String, JsonNode>> fields = obj.fields();
-			
-			while(fields.hasNext()){
-				Entry<String, JsonNode> next = fields.next();
-				if(next.getValue().isTextual()){
-					next.setValue(new TextNode(vars.expand(next.getValue().asText())));
-				}else	
-					expandVars(next.getValue(), vars);
-			}
-		}
-		return node;
-	}
-
 	@SuppressWarnings("unchecked")
 	public static <T extends JsonNode> T copy(ObjectMapper mapper, T node) {
 		try {
@@ -162,16 +128,42 @@ public class TaskUtils {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T checkOption(List<Object> config, int i, Class<T> class1) {
-		Object object = config.get(i);
-		try {
-			if(object == null) return null;
-			
-			return (T)object;
-		}catch (ClassCastException e) {
-			throw new OptionException(i,"Invalid parsed option type. Expected "+class1.getName()+" but type is"+object.getClass().getName());
+	@SafeVarargs
+	public static <T> void addAll(List<T> list, T ...arr){
+		for(T item:arr) list.add(item);
+	}
+	
+	@SafeVarargs
+	public static<T> List<T> toList(T ...arr){
+		List<T> list = new ArrayList<T>();
+		for(T item:arr) list.add(item);
+		return list;
+	}
+	
+	public static ObjectNode toObjectNode(ObjectNode ret, JsonMapper mapper, Object ...arr){
+		if(ret == null) ret = mapper.createObjectNode();
+		for(int i=1; i<arr.length; i+=2) {
+			ret.putPOJO(arr[i-1].toString(), arr[i]);
 		}
+		return ret;
+	}
+
+	public static <T> List<T> map(List<T> list, Function<T, T> func){
+		List<T> ret = new ArrayList<>();
 		
-	}	
+		for(T tmp:list) {
+			ret.add(func.apply(tmp));
+		}
+		return ret;
+	}
+	
+	public static String[] map(String[] list, Function<String, String> func){
+		String[] ret = new String[list.length];
+		
+		for(int i=0; i<list.length; i++) {
+			ret[i] = func.apply(list[i]);
+		}
+		return ret;
+	}
+	
 }

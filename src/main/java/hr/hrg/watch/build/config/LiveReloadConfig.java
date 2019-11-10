@@ -4,21 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @JsonIgnoreProperties("type")
-public class ExtConfig {
-
-	public String cmd;
-	public String[] params = {};
+public class LiveReloadConfig{
 	
-	public String input = "./";
-	public String output = "./";
-
+	public String input;
+	public String liveReloadScript;
+	public int port = 35729;
+	public long pauseAfterCss = 0;
+	
 	public List<String> include = new ArrayList<>();
 	public List<String> exclude = new ArrayList<>();
-	
-	public ObjectNode options;
-	public String srcRoot;
 	
 }

@@ -12,7 +12,7 @@
   
   <logger name="hr.hrg.javawatcher" level="info"/>
   
-  <root level="debug">
+  <root level="warn">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

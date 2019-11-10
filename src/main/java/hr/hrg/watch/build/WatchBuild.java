@@ -1,7 +1,9 @@
 package hr.hrg.watch.build;
 
+
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,86 +15,57 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import hr.hrg.watch.build.config.ConfigException;
-import hr.hrg.watch.build.config.TaskDef;
-import hr.hrg.watch.build.config.TaskOption;
-import hr.hrg.watch.build.option.OptionParser;
-import hr.hrg.watch.build.task.TaskFactory;
-import hr.hrg.watch.build.task.VarTaskFactory;
+import hr.hrg.watch.build.task.AbstractTask;
+import hr.hrg.watch.build.task.AbstractTaskFactory;
 import hr.hrg.watchsass.Compiler;
 
 public class WatchBuild {
-
-	Logger log = LoggerFactory.getLogger(WatchBuild.class);
 	
 	protected JsonMapper mapper   = new JsonMapper();
 	protected YAMLMapper yamlMapper = new YAMLMapper();
 
-	protected Path confFile;
 	protected HashMap<Path, Path> included = new LinkedHashMap<>();
 	
-	protected HashMap<String, TaskFactory> factories = new LinkedHashMap<>();
-	protected HashMap<String, OptionParser> parsers = new LinkedHashMap<>();
+	protected HashMap<String, AbstractTaskFactory<?,?>> factories = new LinkedHashMap<>();
 	
 	protected Map<String, Object> namedTasks = new ConcurrentHashMap<>();	
 	protected List<Thread> threads = new ArrayList<>();
 
 	protected List<ErrorEntry> errors = new ArrayList<>();
 	
-	private boolean watch;
-	private boolean dryRun;
 	private Path outputRoot;
 	private Path basePath;
 	private long burstDelay = 50;
-	protected VarMap vars;
 	
 	String lang;
 	String[] langs;
 	
 	public WatchBuild(){
-		vars = new VarMap();
+		basePath = Paths.get("./");
+		outputRoot = basePath;
 	}
 
-	public WatchBuild(String varPattern){
-		vars = new VarMap(varPattern);
-	}
-
-	public void setFactories(Map<String, TaskFactory> factories) {
-		for(Entry<String, TaskFactory> e:factories.entrySet()) {
+	public void setFactories(Map<String, AbstractTaskFactory<?,?>> factories) {
+		for(Entry<String, AbstractTaskFactory<?,?>> e:factories.entrySet()) {
 			this.factories.put(e.getKey().toLowerCase(), e.getValue());
 		}
 	}
 
-	public void setParsers(Map<String, OptionParser> parsers) {
-		for(Entry<String, OptionParser> e:parsers.entrySet()) {
-			this.parsers.put(e.getKey().toLowerCase(), e.getValue());
-		}
-	}
-	
-	public void addRunner(Map.Entry<String, TaskFactory> e){
+	public void addRunner(Map.Entry<String, AbstractTaskFactory<?,?>> e){
 		factories.put(e.getKey().toLowerCase(), e.getValue());
 	}
 
-	public void addRunner(String code, TaskFactory runner){
+	public void addRunner(String code, AbstractTaskFactory<?,?> runner){
 		factories.put(code.toLowerCase(), runner);
 	}
 	
-	public TaskFactory getRunner(String code) {
+	public AbstractTaskFactory<?,?> getRunner(String code) {
 		return factories.get(code);
-	}
-
-	public void addOptionParser(String code, OptionParser runner){
-		parsers.put(code.toLowerCase(), runner);
-	}
-	
-	public OptionParser getOptionParser(String code) {
-		return parsers.get(code.toLowerCase());
 	}
 
 	public void addThread(Thread thread){
@@ -111,49 +84,83 @@ public class WatchBuild {
 		return burstDelay;
 	}
 	
+	public JsonMapper getMapper() {
+		return mapper;
+	}
+	
+	public YAMLMapper getYamlMapper() {
+		return yamlMapper;
+	}
+	
 	public void setBurstDelay(long burstDelay) {
 		this.burstDelay = burstDelay;
 	}
 	
 	protected void runFromArgs(String[] args) {
-		watch = false;
-		dryRun = false;
+		boolean watch = false;
+		String confFile = null;
 
-		for(int i=1; i<args.length; i++) {
-			if("--watch".equals(args[i])) 
+		for(int i=0; i<args.length; i++) {
+			if("--watch".equals(args[i]) || "-w".equals(args[i])) 
 				watch = true;
 			else  if("-v".equals(args[i])) 
 				Main.VERBOSE = 1;
 			else  if("-vv".equals(args[i])) 
 				Main.VERBOSE = 2;
-			else  if("--dry-run".equals(args[i])) 
-				dryRun = true;
+			else
+				confFile = args[i];
 		}
 		
 		Compiler.VERBOSE = Main.VERBOSE;
-		
-		runBuild(args[0]);
-		if(!watch) return;
-		
-		System.out.println();
-		System.out.println("type: \"r\" and press <ENTER> to reload the script");
-		System.out.println("type: \"q\" and press <ENTER> to quit");
+		List<AbstractTask<?>> tasks = new ArrayList<>();
 		
 		try {
+			InputStream inputStream = confFile == null ? System.in : new FileInputStream(confFile);
+			
+			JsonNode node = null;
+			if(confFile != null && ( confFile.endsWith(".yml") || confFile.endsWith(".yaml")))
+				node = yamlMapper.readTree(inputStream);
+			else
+				node = mapper.readTree(inputStream);
+
+			int size = node.size();
+			for(int i=0; i<size; i++) {
+				
+				ObjectNode conf = (ObjectNode) node.get(i);
+				
+				try {
+					
+					if(!conf.hasNonNull("type")) throw new RuntimeException("type null for item#"+i+": "+conf);
+					
+					String type = conf.get("type").asText().toLowerCase();
+					
+					
+					AbstractTaskFactory<?,?> factory = factories.get(type);
+					if(factory == null) throw new RuntimeException("Factory not found for: "+type);
+					
+					tasks.add(factory.task(conf));
+				} catch (Exception e) {
+					throw new RuntimeException("problem with item#"+i+": "+conf, e);
+				}
+			}
+				
+			runBuild(tasks, watch);
+			
+			if(!watch || confFile == null) return;
+						
+			System.out.println();
+			System.out.println("type: \"q\" and press <ENTER> to quit");
+		
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			String line = null;
 			while((line=br.readLine()) != null) {
-				if(line.toLowerCase().equals("r")){
-					restartBuild();
-				}else if(line.toLowerCase().equals("s")){
-					stopBuild();
-				}else if(line.toLowerCase().equals("q")){
+				if(line.toLowerCase().equals("q")){
 					stopBuild();
 					System.exit(0);
 				}
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(),e);
+			Main.logError(e.getMessage(),e);
 		}
 	}
 
@@ -186,25 +193,16 @@ public class WatchBuild {
 		included.clear();
 	}
 	
-	public void restartBuild() {
-		stopBuild();
-		startBuild();
-	}
-	public void runBuild(String file) {
+	public void runBuild(List<AbstractTask<?>> tasks, boolean watch) {
 		
-		confFile = Paths.get(file);
+		errors.clear();
 		
-		basePath = Paths.get("./");
-		outputRoot = basePath;
-
-		startBuild();
-	}
-
-	public void startBuild() {
 		try {
-			errors.clear();
-			loadFile(confFile);
 			
+			for(AbstractTask<?> task:tasks) {
+				task.start(watch);
+			}
+
 			if(threads.size() >0) System.out.println("Starting "+threads.size()+" watch threads");
 			for(Thread thread: threads){
 				System.out.println("THREAD: "+thread.getName());
@@ -220,181 +218,9 @@ public class WatchBuild {
 				}
 				System.out.println();
 			}
-		} catch (ConfigException e) {
-			log.error(e.getMessage(),e);
-			log.error("Configuration Error ******************************************************************************************************** \n\n"
-					+e.getInfoNl() + "\n"+e.getMessage()+"\n\n");
-			log.error("Configuration Error ******************************************************************************************************** ");
 		} catch (Exception e) {
-			log.error(e.getMessage(),e);;
+			Main.logError(e.getMessage(),e);;
 		}
-	}
-
-	enum Token {START,TASK,OPTION}
-	
-	public void loadFile(Path confFile){
-		confFile = confFile.toAbsolutePath();
-		
-		if(included.containsKey(confFile)) {
-			System.out.println("Skipping already included conf: "+confFile);
-			return;
-		}
-		included.put(confFile, confFile);
-
-		String line = null;
-		String trimmed;
-		int lineNumber = 0;
-		
-		List<TaskDef> tasks = new ArrayList<>();
-		// current task and option while parsing
-		TaskDef task = null;
-		TaskOption option = null;
-		boolean hasNonEmptyLines = false;
-		
-		try(
-				BufferedReader br = new BufferedReader(new FileReader(confFile.toFile()));
-				){
-			while((line=br.readLine()) != null) {
-				lineNumber++;
-				// fail if there are tabs (tabs would just cause problems if added accidentally)
-				for(int i=0; i<line.length(); i++) {
-					if(line.charAt(i) == '\t') {
-						throw new Exception(confFile.toAbsolutePath()+":"+lineNumber+":"+(i+1)+" TAB character not allowed inside the script");
-					}else if(line.charAt(i) != ' '){
-						break;
-					}
-				}
-				trimmed = line.trim();
-				
-				if(!trimmed.isEmpty() && trimmed.charAt(0) == '@'){// start: TASK|OPTION
-
-					if(trimmed.charAt(1) == '@'){// start: OPTION
-						if(task == null) throw new Exception(confFile.toAbsolutePath()+":"+lineNumber+" Option defined before any task was defined");
-						
-						// this make sense for the first option (for example if there is empty line or comment between task and firdt option)
-						if(!hasNonEmptyLines && task.options.size() == 1) task.options.remove(0);
-						
-						if("@@end".equals(trimmed.toLowerCase())) {
-							option = null;
-						}else {
-							option = new TaskOption(confFile,lineNumber, TaskUtils.parseDefLine(trimmed.substring(2).trim()));
-						}
-
-					}else{// start: TASK
-						if(task != null) finishTaskProcessing(task,hasNonEmptyLines);
-						if("@@end".equals(trimmed.toLowerCase())) {
-							option = null;
-						}else {							
-							task = new TaskDef(confFile,lineNumber,TaskUtils.parseDefLine(trimmed.substring(1).trim()));
-							tasks.add(task);
-							
-							option = new TaskOption(confFile,lineNumber);
-						}
-						hasNonEmptyLines = false;
-					}
-					task.options.add(option);
-					
-				}else{// lines for current token
-					if(option == null && !TaskUtils.emptyOrcomment(trimmed)){
-						throw new Exception(confFile.toAbsolutePath()+":"+lineNumber+" Only empty lines and comments allowed before any task is defined");
-					}
-					// to recognize empty space between task definition and first option
-					if(!TaskUtils.emptyOrcomment(trimmed)) hasNonEmptyLines = true;
-
-					// all comment lines are kept trimmed for easier checking later if the line is comment line
-					// but we need to keep them so proper line numbers could be reported in case of errors
-					if(option != null) // ignore initial comment and empty lines
-						option.lines.add(TaskUtils.emptyOrcomment(trimmed) ? trimmed:line);
-				}
-			}
-			finishTaskProcessing(task,hasNonEmptyLines);
-			
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new ConfigException(e.getMessage(),e);
-		}
-	}
-
-	protected void finishTaskProcessing(TaskDef task, boolean hasNonEmptyLines) {
-		try {
-			if(dryRun) System.out.println("TASK: "+task.type+" config lines: "+task.options.get(0).lines.size());
-			int minIndent = -1;
-			for(TaskOption option: task.options){
-				for(String line: option.lines){
-					if(TaskUtils.emptyOrcomment(line)) continue;
-					for(int i=0; i<line.length(); i++) {
-						if(line.charAt(i) != ' '){
-							if(minIndent == -1 ||  i<minIndent) minIndent = i;
-							break;
-						}
-					}
-				}
-				if(dryRun) System.out.println("OPTION: "+option.type+" indent: "+minIndent);
-			}
-			TaskFactory taskFactory = factories.get(task.type);
-			if(taskFactory == null) {
-				System.out.println("Please use one of available task factories: "+getJson(factories.keySet()));
-				throw new RuntimeException(" Task runner type: "+task.type+" not found "+task.confFile.toAbsolutePath()+":"+task.lineNumber);
-			}else {
-				if(task.options.get(0).type == null) {
-					if(dryRun) System.out.println("Using default OptionParser "+taskFactory.getDefaultOptionParser()+" for task "+task.confFile.toAbsolutePath()+":"+task.options.get(0).lineNumber);
-					task.options.get(0).type = taskFactory.getDefaultOptionParser();
-				}
-				if(!dryRun || taskFactory.alwaysRun()) {
-					ArrayList<Object> options = new ArrayList<>();
-					for(TaskOption op: task.options) {
-						OptionParser optionParser = getOptionParser(op.type);
-						if(optionParser == null) {
-							System.out.println("Please use one of available option parsers: "+getJson(parsers.keySet()));
-							throw new RuntimeException(" OptionParser type: "+op.type+" not found "+op.confFile.toAbsolutePath()+":"+op.lineNumber);
-						}
-						
-						options.add(optionParser.parse(op));
-					}
-					taskFactory.start(task, options, watch);
-					if(taskFactory instanceof VarTaskFactory) {
-						afterVars();
-					}
-				}
-			}
-			
-		} catch (ConfigException e) {
-			if(e.isWithConfigInfo()) throw e;
-			throw new ConfigException(task,e.getMessage(),e);
-		} catch (RuntimeException e) {
-			throw new ConfigException(task,e.getMessage(),e);
-		}
-	}
-	
-	private void afterVars(){
-		lang = vars.get("lang");
-		if(lang == null ) lang = "";
-		langs = new String[]{lang};
-		if(lang.indexOf(',') != -1) {
-			langs = lang.split(",");
-			lang = langs[0];
-		}
-		try {
-			if(vars.containsKey("burstDelay")) {
-				burstDelay = Long.parseLong(vars.get("burstDelay"));
-				log.info("new burstDelay: "+burstDelay);
-			}
-		} catch (Exception e) {
-			log.error("Invalid value for burstDelay: "+vars.get("burstDelay"));
-		}
-	}
-
-	public VarMap getVars() {
-		return vars;
-	}
-
-	public String getLang() {
-		return lang;
-	}
-	
-	public String[] getLangs() {
-		return langs;
 	}
 	
 	public void registerTask(String code, Object task) {
@@ -422,13 +248,11 @@ public class WatchBuild {
 		return errors;
 	}
 	
-	public void logError(Logger log2, String string) {
-		log2.error(string);
+	public void logError(String string) {
 		errors.add(new ErrorEntry(string));
 	}
 
-	public void logError(Logger log2, String string, Throwable e) {
-		log2.error(string,e);
+	public void logError(String string, Throwable e) {
 		errors.add(new ErrorEntry(string,e));
 	}
 

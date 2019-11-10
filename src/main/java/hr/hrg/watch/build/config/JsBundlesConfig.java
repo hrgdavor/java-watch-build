@@ -1,58 +1,37 @@
 package hr.hrg.watch.build.config;
 
+import static hr.hrg.watch.build.TaskUtils.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties("type")
 public class JsBundlesConfig{
 
 	public boolean compareBytes = true;
+
 	public String root;
-	public boolean outputJS;
 	public boolean outputText;
-	public String compilationLevel = "SIMPLE";
-	public boolean perLanguage = true;
 	public List<BundleEntry> bundles = new ArrayList<>();
 	
 	public static class BundleEntry{
 		public String name;
+		@JsonIgnore(false)
 		public List<String> include = new ArrayList<>();
+		@JsonIgnore(false)
 		public List<String> exclude = new ArrayList<>();
 		
+		@JsonIgnore
+		public BundleEntry include(String ...arr) { addAll(include, arr); return this; }
+		@JsonIgnore
+		public BundleEntry include(List<String> list) { include.addAll(list); return this; }
+		@JsonIgnore
+		public BundleEntry exclude(String ...arr) { addAll(exclude, arr); return this; }
+		@JsonIgnore
+		public BundleEntry exclude(List<String> list) { exclude.addAll(list); return this; }
 	}
 }
 
-
-/*
-
-package hr.hrg.watch.build.config;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class JsBundlesConfig{
-
-	public String name;
-	public Boolean compareBytes;
-	public String root;
-	public Boolean outputJS;
-	public Boolean outputText;
-	public String compilationLevel;
-	public List<String> include = new ArrayList<>();
-	public List<String> exclude = new ArrayList<>();
-
-	public boolean perLanguage = true;
-	
-	public Defaults defaults = new Defaults(); 
-	
-	public static class Defaults{
-		public boolean compareBytes = true;
-		public String root;
-		public String jsRoot = "js";	
-		public String srcRoot = "src";	
-		public boolean outputJS;
-		public boolean outputText;
-		public String compilationLevel = "SIMPLE";
-		
-	}
-}
-*/

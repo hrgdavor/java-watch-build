@@ -1,121 +1,35 @@
 package hr.hrg.watch.build.task;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.zip.GZIPOutputStream;
+import static hr.hrg.watch.build.TaskUtils.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import hr.hrg.javawatcher.FileChangeEntry;
-import hr.hrg.javawatcher.FileMatchGlob;
-import hr.hrg.javawatcher.GlobWatcher;
-import hr.hrg.watch.build.JsonMapper;
-import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.WatchBuild;
+import hr.hrg.watch.build.config.CopyConfig;
 import hr.hrg.watch.build.config.GzipConfig;
-import hr.hrg.watch.build.config.TaskDef;
 
-public class GzipTaskFactory extends AbstractTaskFactory{
+public class GzipTaskFactory extends AbstractTaskFactory<GzipTask, GzipConfig>{
 
-	Logger log = LoggerFactory.getLogger(GzipTaskFactory.class);
 	
-	public GzipTaskFactory(WatchBuild core, JsonMapper mapper){
-		super(core, mapper);
+	public GzipTaskFactory(WatchBuild core){
+		super(core, new GzipConfig());
+	}
+
+	public GzipTaskFactory(WatchBuild core, String input, String output) {
+		super(core, new GzipConfig());
+		config.input = input;
+		config.output = output;
 	}
 	
 	@Override
-	public void startOne(TaskDef taskDef, String lang, JsonNode root, boolean watch) {
-		GzipConfig config = mapper.convertValue(root, GzipConfig.class);
-
-		Task task = new Task(config);
-		task.start(watch);
-		if(watch)
-			core.addThread(new Thread(task,"Gzip:"+config.input+" to "+config.output));
-
+	public GzipTask build() {
+		return new GzipTask(config, core);
 	}
-	
-	class Task implements Runnable {
 
-		private GlobWatcher watcher;
-		protected Path toPath;
+	public GzipTaskFactory include(String ...arr) { addAll(config.include, arr); return this; }
+	public GzipTaskFactory exclude(String ...arr) { addAll(config.exclude, arr); return this; }
+	public GzipTaskFactory include(List<String> list) { config.include.addAll(list); return this; }
+	public GzipTaskFactory exclude(List<String> list) { config.exclude.addAll(list); return this; }
 
-		public Task(GzipConfig config) {
-			if(config.output == null) config.output = config.input;
-
-			File f = new File(config.input);
-			if(!f.exists()) throw new RuntimeException("Folder does not exist "+config.input);
-			
-			watcher = new GlobWatcher(f.getAbsoluteFile().toPath());
-			
-			watcher.includes(config.include);
-			watcher.excludes(config.exclude);
-			
-			toPath = core.getOutputRoot().resolve(config.output);
-		}
-		
-		public void start(boolean watch){
-			this.watcher.init(watch);
-			Collection<Path> files = watcher.getMatchedFiles();
-			for (Path path : files) {
-				compressFile(path, gzPath(path), true);
-			}
-		}
-
-		private Path gzPath(Path path) {
-			return toPath.resolve(watcher.relativize(path)).resolveSibling(path.getFileName().toString()+".gz");
-		}
-	
-		public void run(){
-			try {
-				while(!Thread.interrupted()){
-					Collection<FileChangeEntry<FileMatchGlob>> changes = watcher.takeBatch(core.getBurstDelay());
-					if(changes == null) break; // interrupted
-					
-					for (FileChangeEntry<FileMatchGlob> entry : changes){
-						Path path = entry.getPath();
-						
-						if(path.toFile().isDirectory()) continue;
-						
-						if(Main.VERBOSE > 1) log.info("changed:"+entry+" "+path.toFile().lastModified());
-						
-						compressFile(path, gzPath(path), false);
-					}
-				}
-				
-			} finally {
-				watcher.close();
-			}
-		}
-	
-		
-		protected boolean compressFile(Path from, Path to, boolean initial){
-			File fromFile = from.toFile();
-			File toFile = to.toFile();
-			boolean shouldCopy = !toFile.exists() || fromFile.lastModified() > toFile.lastModified();
-	
-			if(shouldCopy){
-				try {				
-					GZIPOutputStream gzo = new GZIPOutputStream(new FileOutputStream(toFile));
-					Files.copy(from, gzo);
-					gzo.close();
-				} catch (Exception e) {
-					log.error("ERROR generating gzip ",e);
-				}
-				
-				if((initial && Main.VERBOSE > 1) || (!initial && Main.VERBOSE > 0)) 
-					log.info("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
-				toFile.setLastModified(fromFile.lastModified());
-				return true;
-			}else{
-				if(Main.VERBOSE > 1) log.info(" skip already generated: "+to);
-				return false;
-			}
-		}
-	}
 }
+
