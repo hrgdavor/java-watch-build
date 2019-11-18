@@ -28,6 +28,7 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory<HtmlScriptA
 	public HtmlScriptAndCssTaskFactory compareBytes(boolean val) { config.compareBytes = val; return this; }
 	public HtmlScriptAndCssTaskFactory compareBytes() { config.compareBytes = true; return this; }
 	
+	public HtmlScriptAndCssTaskFactory globalsReplace(String val) { config.globalsReplace = val; return this; }
 	public HtmlScriptAndCssTaskFactory scriptReplace(String val) { config.scriptReplace = val; return this; }
 	public HtmlScriptAndCssTaskFactory scriptVariable(String val) { config.scriptVariable = val; return this; }
 	public HtmlScriptAndCssTaskFactory cssReplace(String val) { config.cssReplace = val; return this; }
@@ -39,4 +40,9 @@ public class HtmlScriptAndCssTaskFactory extends AbstractTaskFactory<HtmlScriptA
 	public HtmlScriptAndCssTaskFactory css(String ...arr) { addAll(config.css, arr); return this; }
 	public HtmlScriptAndCssTaskFactory css(List<String> list) { config.css.addAll(list); return this; }
 	
+	public HtmlScriptAndCssTaskFactory global(String key, Object value) { 
+		if(config.globals == null) config.globals = core.getMapper().createObjectNode();
+		config.globals.putPOJO(key, value);
+		return this; 
+	}
 }

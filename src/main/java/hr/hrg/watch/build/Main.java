@@ -2,6 +2,7 @@ package hr.hrg.watch.build;
 
 import java.util.HashMap;
 
+import hr.hrg.watch.build.config.MkdirConfig;
 import hr.hrg.watch.build.task.AbstractTaskFactory;
 import hr.hrg.watch.build.task.CopyTaskFactory;
 import hr.hrg.watch.build.task.ExtTaskFactory;
@@ -10,6 +11,8 @@ import hr.hrg.watch.build.task.HtmlScriptAndCssTaskFactory;
 import hr.hrg.watch.build.task.JsBundlesTaskFactory;
 import hr.hrg.watch.build.task.LangTaskFactory;
 import hr.hrg.watch.build.task.LiveReloadTaskFactory;
+import hr.hrg.watch.build.task.MkdirTaskFactory;
+import hr.hrg.watch.build.task.ProxyTaskFactory;
 import hr.hrg.watch.build.task.SassBundlesTaskFactory;
 import hr.hrg.watch.build.task.SassTaskFactory;
 
@@ -34,9 +37,11 @@ public class Main {
 		HashMap<String, AbstractTaskFactory<?,?>> factories = new HashMap<>();
 
 		// basic
+		factories.put("Mkdir", new MkdirTaskFactory(watchBuild));
 		factories.put("Copy", new CopyTaskFactory(watchBuild));
 		factories.put("Gzip", new GzipTaskFactory(watchBuild));
 		factories.put("Ext", new ExtTaskFactory(watchBuild));
+		factories.put("Proxy", new ProxyTaskFactory(watchBuild));
 		factories.put("LiveReload", new LiveReloadTaskFactory(watchBuild));
 		
 		// advanced tasks (in mini shaded bundle:  sass is not included at all, jsbundles works, but can not compile js)

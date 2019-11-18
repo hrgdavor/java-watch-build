@@ -8,8 +8,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties("type")
 public class JsBundlesConfig{
+	public String type="JsBundles";
 
 	public boolean compareBytes = true;
 

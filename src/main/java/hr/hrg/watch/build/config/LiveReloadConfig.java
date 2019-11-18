@@ -5,8 +5,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties("type")
 public class LiveReloadConfig{
+	public String type="LiveReload";
 	
 	public String input;
 	public String liveReloadScript;

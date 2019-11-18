@@ -6,8 +6,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@JsonIgnoreProperties("type")
 public class ExtConfig {
+	public String type="Ext";
 
 	public String cmd;
 	public String[] params = {};

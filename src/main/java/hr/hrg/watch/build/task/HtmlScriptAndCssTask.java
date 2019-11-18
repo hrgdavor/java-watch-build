@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -63,10 +64,10 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 			long mod = file.lastModified();
 			if(script.endsWith("js")){
 				scripts.add(new ScriptEntry(script, file));
-				if(mod >maxLastModified) maxLastModified = mod;
+				updateLastModified(mod);
 			}else if(script.endsWith("json")) {
 				scripts.add(new BundleEntry(file));
-				if(mod >maxLastModified) maxLastModified = mod;
+				updateLastModified(mod);
 			}else {
 				Main.logWarn("unsupportd script type "+script);
 			}
@@ -99,29 +100,30 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 	}
 
 
-	private void genHtml(Path file) {
+	private void genHtml(Path htmlPath) {
 
 		StringBuilder bScript = new StringBuilder();
 		StringBuilder bCss = new StringBuilder();
+		StringBuilder bGlobal = new StringBuilder();
 		StringBuilder bLastMod = new StringBuilder();
 		
+		updateLastModified(htmlPath.toFile().lastModified());
 		
 		String html;
 		try {
-			html = new String(Files.readAllBytes(file));
+			html = new String(Files.readAllBytes(htmlPath));
 		} catch (IOException e) {
-			Main.logError("Error reading file "+file+" "+e.getMessage(),e);
+			Main.logError("Error reading file "+htmlPath+" "+e.getMessage(),e);
 			return;
 		}
 		
 		Main.logInfo("Generating "+config.output);
 
 		int idxScript = html.indexOf(config.scriptReplace);
+		int idxGlobals = html.indexOf(config.globalsReplace);
 		int idxCss = html.indexOf(config.cssReplace);
 		int idxLastMod = html.indexOf(config.lastModReplace);
-		
-		long maxLastModifiedScript = 0;
-		
+				
 		if(idxScript != -1) {
 			boolean first = true;
 
@@ -137,14 +139,15 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 					appendScript(bScript, scriptEntry.script, scriptEntry.file.lastModified());
 					first = false;
 
-					maxLastModifiedScript = Math.max(maxLastModifiedScript, scriptEntry.file.lastModified());
+					updateLastModified(scriptEntry.file.lastModified());
 					
 				}else if(entry instanceof BundleEntry) {
 					BundleEntry bundle = (BundleEntry) entry;
 					if(bundle.lastModified < bundle.bundleFile.lastModified()) {
 						loadBundle(bundle);
 					}
-					maxLastModifiedScript = Math.max(maxLastModifiedScript, bundle.bundleFile.lastModified());
+
+					updateLastModified(bundle.bundleFile.lastModified());
 					
 					for(JsInBundle js:bundle.scripts) {
 						
@@ -155,8 +158,8 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 						if(!first) bScript.append(",\n");
 						appendScript(bScript, src.toString(), js.modified);
 						first = false;
-						
-						maxLastModifiedScript = Math.max(maxLastModifiedScript, js.modified);
+
+						updateLastModified(js.modified);
 					}
 				}else {
 					Main.logError("Unsupported script entry "+entry.getClass().getName(), null);
@@ -172,15 +175,27 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 		if(idxCss != -1) {
 			for(ScriptEntry js:cssScripts) {
 				bCss.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"").append(js.script)
-				.append("?__mt__=").append(js.file.lastModified()).append("\"></script>\n");
-				maxLastModifiedScript = Math.max(maxLastModifiedScript, js.file.lastModified());
-
+				.append("?__mt__=").append(js.file.lastModified()).append("\"/>\n");
+				updateLastModified(js.file.lastModified());
 			}
 		}
 		
-		bLastMod.append("<script>").append("var APP_LAST_MODIFIED = ").append(maxLastModifiedScript).append(";</script>\n");
+		bGlobal.append("<script>");
+		if(config.globals != null && !config.globals.isNull()) {
+			Iterator<String> fieldNames = config.globals.fieldNames();
+			while(fieldNames.hasNext()) {
+				String fieldName = fieldNames.next();
+				bGlobal.append("var ").append(fieldName).append(" = ");
+				bGlobal.append(core.getMapper().writeValueAsStringNoEx(config.globals.get(fieldName)));
+				bGlobal.append(";\n");
+			}
+		}
+		bGlobal.append("</script>\n");
+		
+		bLastMod.append("<script>").append("var APP_LAST_MODIFIED = ").append(maxLastModified).append(";</script>\n");
 		
 		ReplaceDef[] idx = new ReplaceDef[]{
+				new ReplaceDef(idxGlobals, config.globalsReplace, bGlobal),
 				new ReplaceDef(idxScript, config.scriptReplace, bScript),
 				new ReplaceDef(idxCss, config.cssReplace, bCss),
 				new ReplaceDef(idxLastMod, config.lastModReplace, bLastMod),
@@ -207,8 +222,12 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 		if(!TaskUtils.writeFile(Paths.get(config.output), bHtml.toString().getBytes(), config.compareBytes, maxLastModified)){
 			if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+config.output);			
 		}else {
-			TaskUtils.writeFile(Paths.get(config.output+".lastmodified"), Long.toString(maxLastModifiedScript).getBytes(), config.compareBytes, maxLastModified);
+			TaskUtils.writeFile(Paths.get(config.output+".lastmodified"), Long.toString(maxLastModified).getBytes(), config.compareBytes, maxLastModified);
 		}
+	}
+
+	private void updateLastModified(long modified) {
+		maxLastModified = Math.max(maxLastModified, modified);
 	}
 
 	private void loadBundle(BundleEntry bundle) {
@@ -244,8 +263,7 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 						if(changes == null) break; // null means interrupted, and we should end this loop
 						
 						for(Path p: changes){
-							long mod = p.toFile().lastModified();
-							if(mod > maxLastModified) maxLastModified = mod;								
+							updateLastModified(p.toFile().lastModified());
 						}
 						
 						for (Path file : htmlFiles) {

@@ -3,6 +3,8 @@ package hr.hrg.watch.build;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import hr.hrg.watch.build.task.AbstractTask;
 import hr.hrg.watch.build.task.AbstractTaskFactory;
 import hr.hrg.watch.build.task.CopyTaskFactory;
@@ -13,6 +15,7 @@ import hr.hrg.watch.build.task.JsBundlesTaskFactory;
 import hr.hrg.watch.build.task.LangTaskFactory;
 import hr.hrg.watch.build.task.LiveReloadTaskFactory;
 import hr.hrg.watch.build.task.MkdirTaskFactory;
+import hr.hrg.watch.build.task.ProxyTaskFactory;
 import hr.hrg.watch.build.task.SassTaskFactory;
 import hr.hrg.watchsass.Compiler;
 import wrm.libsass.SassCompiler.OutputStyle;
@@ -75,6 +78,10 @@ public class JavaWatchBuild {
 		return add(new JsBundlesTaskFactory(core, root));
 	}
 	
+	public ProxyTaskFactory doProxy(int port) {
+		return add(new ProxyTaskFactory(core, port));
+	}
+	
 	/** Same as doScss
 	 * 
 	 * @param input input 
@@ -95,5 +102,20 @@ public class JavaWatchBuild {
 
 	public HtmlScriptAndCssTaskFactory doHtmlScriptAndCss(String input, String output) {
 		return add(new HtmlScriptAndCssTaskFactory(core, input, output));
+	}
+	
+	public String dumpConfig() {
+		List<Object> tasks = new ArrayList<>();
+		
+		for(AbstractTaskFactory<?, ?> factory:factories) {
+			tasks.add(factory.getConfig());
+		}
+		
+		try {
+			return core.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(tasks);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

@@ -21,4 +21,8 @@ public abstract class AbstractTaskFactory<T extends AbstractTask<?>,C> {
 	}
 	
 	public abstract T build();
+	
+	public C getConfig() {
+		return config;
+	}
 }

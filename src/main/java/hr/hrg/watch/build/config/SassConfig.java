@@ -8,8 +8,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import wrm.libsass.SassCompiler.InputSyntax;
 import wrm.libsass.SassCompiler.OutputStyle;
 
-@JsonIgnoreProperties("type")
 public class SassConfig {
+	public String type="Sass";
+	
 	public String input;
 	public String output;
 	

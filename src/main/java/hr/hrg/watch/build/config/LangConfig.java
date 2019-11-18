@@ -5,8 +5,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties("type")
 public class LangConfig{
+	public String type="Lang";
 	
 	public List<String> input = new ArrayList<>();
 	public List<String> output = new ArrayList<>();

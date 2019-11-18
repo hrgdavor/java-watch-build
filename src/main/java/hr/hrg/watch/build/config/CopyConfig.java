@@ -5,8 +5,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties("type")
 public class CopyConfig{
+	public String type="Copy";
+
 	public String input;
 	public String output;
 	
