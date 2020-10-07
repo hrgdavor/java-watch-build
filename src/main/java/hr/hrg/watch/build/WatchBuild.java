@@ -104,14 +104,13 @@ public class WatchBuild {
 			if("--watch".equals(args[i]) || "-w".equals(args[i])) 
 				watch = true;
 			else  if("-v".equals(args[i])) 
-				Main.VERBOSE = 1;
+				hr.hrg.javawatcher.Main.VERBOSE = 1;
 			else  if("-vv".equals(args[i])) 
-				Main.VERBOSE = 2;
+				hr.hrg.javawatcher.Main.VERBOSE = 2;
 			else
 				confFile = args[i];
 		}
 		
-		Compiler.VERBOSE = Main.VERBOSE;
 		List<AbstractTask<?>> tasks = new ArrayList<>();
 		
 		try {
@@ -160,7 +159,7 @@ public class WatchBuild {
 				}
 			}
 		} catch (Exception e) {
-			Main.logError(e.getMessage(),e);
+			hr.hrg.javawatcher.Main.logError(e.getMessage(),e);
 		}
 	}
 
@@ -219,7 +218,7 @@ public class WatchBuild {
 				System.out.println();
 			}
 		} catch (Exception e) {
-			Main.logError(e.getMessage(),e);;
+			hr.hrg.javawatcher.Main.logError(e.getMessage(),e);;
 		}
 	}
 	

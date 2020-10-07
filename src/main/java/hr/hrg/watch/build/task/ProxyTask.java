@@ -37,7 +37,7 @@ public class ProxyTask extends AbstractTask<ProxyConfig>{
 	public void init(boolean watch) {
 		if(!watch) return;
 		
-		Main.logInfo("Starting ");
+		hr.hrg.javawatcher.Main.logInfo("Starting ");
 		long start = System.currentTimeMillis();
         
 		ServletContextHandler  context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -111,10 +111,10 @@ public class ProxyTask extends AbstractTask<ProxyConfig>{
 		try {
 			server.start();			
 		} catch (Exception e) {
-			Main.logError("problem satarting jetty on port "+config.port, e);
+			hr.hrg.javawatcher.Main.logError("problem satarting jetty on port "+config.port, e);
 		}
 
-        Main.logInfo(" Started jetty on port "+config.port);
+		hr.hrg.javawatcher.Main.logInfo(" Started jetty on port "+config.port);
 
 	}
 

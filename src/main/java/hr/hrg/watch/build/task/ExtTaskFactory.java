@@ -26,7 +26,7 @@ public class ExtTaskFactory extends AbstractTaskFactory<ExtTask, ExtConfig> {
 	@Override
 	public ExtTask build() {
 		if(config.options == null) config.options = core.getMapper().createObjectNode();
-		config.options.put("verbose", Main.VERBOSE);
+		config.options.put("verbose", hr.hrg.javawatcher.Main.VERBOSE);
 		return new ExtTask(core, config);
 	}
 

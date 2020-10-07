@@ -1,0 +1,7 @@
+- type: Copy
+  input: src/test
+  output:  target/testCopy
+  include: 
+    - testScript.yml
+  rename:
+    testScript.yml: test.yml

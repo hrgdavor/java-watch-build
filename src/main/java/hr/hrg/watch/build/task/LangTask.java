@@ -73,7 +73,7 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 				
 				for (Path changeEntry : changes) {
 					File file = changeEntry.toFile();
-					if(Main.VERBOSE >0)	Main.logInfo("changed: "+changeEntry+" "+file.lastModified());
+					if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+file.lastModified());
 					cache.remove(file.getAbsolutePath());
 					long mod = file.lastModified();
 					if(mod > maxLastModified) maxLastModified = mod;	
@@ -154,7 +154,7 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 
 		File file = to.toFile();
 		if(file.exists() && file.lastModified() > maxLastModified) {
-			if(Main.VERBOSE > 1) Main.logInfo("skip older: "+to);			
+			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip older: "+to);			
 		}
 
 		ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
@@ -170,10 +170,10 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 		}
 		
 		if(TaskUtils.writeFile(to, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
-			Main.logInfo("Generating "+to);
+			hr.hrg.javawatcher.Main.logInfo("Generating "+to);
 			return true;
 		}else{
-			if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+to);
+			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip identical: "+to);
 			return false;
 		}
 	}

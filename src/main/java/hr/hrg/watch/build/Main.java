@@ -17,8 +17,6 @@ import hr.hrg.watch.build.task.SassBundlesTaskFactory;
 import hr.hrg.watch.build.task.SassTaskFactory;
 
 public class Main {
-
-	public static int VERBOSE = 0;
 	
 	public static void main(String[] args) {
 		if(args.length == 0) printHelp();
@@ -71,20 +69,5 @@ public class Main {
 		System.out.println("\t -vv       - verbose level 2");
 		System.out.println("\t --dry-run - show final configuration for checking the end result is what was intended");
 		System.exit(0);
-	}
-
-	public static void logError(String message, Throwable e) {
-		System.err.println(message);
-		if(e != null) e.printStackTrace();
-	}
-
-	public static void logInfo(String string) {
-		System.out.println(string);
-	}
-
-	public static void logWarn(String string) {
-		System.out.println(string);		
-	}
-
-	
+	}	
 }

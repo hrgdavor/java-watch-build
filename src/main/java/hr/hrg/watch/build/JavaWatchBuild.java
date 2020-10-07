@@ -30,8 +30,7 @@ public class JavaWatchBuild {
 	}
 	
 	public void setVerbose(int verbose) {
-		Main.VERBOSE = verbose;
-		Compiler.VERBOSE = verbose;
+		hr.hrg.javawatcher.Main.VERBOSE = verbose;
 	}
 	
 	public void start(boolean watch) {

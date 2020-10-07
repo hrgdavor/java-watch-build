@@ -1,5 +1,6 @@
 package hr.hrg.watch.build.task;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -69,7 +72,7 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 				scripts.add(new BundleEntry(file));
 				updateLastModified(mod);
 			}else {
-				Main.logWarn("unsupportd script type "+script);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logWarn("unsupportd script type "+script);
 			}
 		}
 
@@ -89,8 +92,13 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 		}
 	}
 
-	private void appendScript(StringBuilder bScript, String script, long lastModified) {
-		if(config.scriptVariable == null) {				
+	private void appendScript(StringBuilder bScript, String script, long lastModified, List<List<Object>> pageScripts) {
+		List<Object> entry = new ArrayList<>();
+		entry.add(script);
+		entry.add(lastModified);
+		pageScripts.add(entry);
+		
+		if(config.scriptVariable == null) {
 			bScript.append("<script src=\"").append(script)
 				.append("?__mt__=").append(lastModified).append("\"></script>\n");
 		}else {
@@ -113,57 +121,56 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 		try {
 			html = new String(Files.readAllBytes(htmlPath));
 		} catch (IOException e) {
-			Main.logError("Error reading file "+htmlPath+" "+e.getMessage(),e);
+			hr.hrg.javawatcher.Main.logError("Error reading file "+htmlPath+" "+e.getMessage(),e);
 			return;
 		}
 		
-		Main.logInfo("Generating "+config.output);
+		if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("Generating "+config.output);
 
 		int idxScript = html.indexOf(config.scriptReplace);
 		int idxGlobals = html.indexOf(config.globalsReplace);
 		int idxCss = html.indexOf(config.cssReplace);
 		int idxLastMod = html.indexOf(config.lastModReplace);
 				
-		if(idxScript != -1) {
-			boolean first = true;
+		List<List<Object>> pageScripts = new ArrayList<>();
+		
+		if(config.scriptVariable != null) {
+			bScript.append("<script>\nvar ").append(config.scriptVariable).append(" = [\n");
+		}
 
-			if(config.scriptVariable != null) {
-				bScript.append("<script>\nvar ").append(config.scriptVariable).append(" = [\n");
-			}
+		boolean first = true;		
+		for(Object entry:scripts) {
+			
+			if(entry instanceof ScriptEntry) {
+				ScriptEntry scriptEntry = (ScriptEntry) entry;
+				if(!first) bScript.append(",\n");
+				appendScript(bScript, scriptEntry.script, scriptEntry.file.lastModified(), pageScripts);
+				first = false;
 
-			for(Object entry:scripts) {
+				updateLastModified(scriptEntry.file.lastModified());
 				
-				if(entry instanceof ScriptEntry) {
-					ScriptEntry scriptEntry = (ScriptEntry) entry;
+			}else if(entry instanceof BundleEntry) {
+				BundleEntry bundle = (BundleEntry) entry;
+				if(bundle.lastModified < bundle.bundleFile.lastModified()) {
+					loadBundle(bundle);
+				}
+
+				updateLastModified(bundle.bundleFile.lastModified());
+				
+				for(JsInBundle js:bundle.scripts) {
+					
+					StringBuffer src = new StringBuffer();
+					if(bundle.jsRoot != null && !bundle.jsRoot.isEmpty()) src.append(bundle.jsRoot).append("/");
+					src.append(js.script);
+					
 					if(!first) bScript.append(",\n");
-					appendScript(bScript, scriptEntry.script, scriptEntry.file.lastModified());
+					appendScript(bScript, src.toString(), js.modified, pageScripts);
 					first = false;
 
-					updateLastModified(scriptEntry.file.lastModified());
-					
-				}else if(entry instanceof BundleEntry) {
-					BundleEntry bundle = (BundleEntry) entry;
-					if(bundle.lastModified < bundle.bundleFile.lastModified()) {
-						loadBundle(bundle);
-					}
-
-					updateLastModified(bundle.bundleFile.lastModified());
-					
-					for(JsInBundle js:bundle.scripts) {
-						
-						StringBuffer src = new StringBuffer();
-						if(bundle.jsRoot != null && !bundle.jsRoot.isEmpty()) src.append(bundle.jsRoot).append("/");
-						src.append(js.script);
-						
-						if(!first) bScript.append(",\n");
-						appendScript(bScript, src.toString(), js.modified);
-						first = false;
-
-						updateLastModified(js.modified);
-					}
-				}else {
-					Main.logError("Unsupported script entry "+entry.getClass().getName(), null);
+					updateLastModified(js.modified);
 				}
+			}else {
+				hr.hrg.javawatcher.Main.logError("Unsupported script entry "+entry.getClass().getName(), null);
 			}
 		}
 		
@@ -219,10 +226,46 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 		}
 		
 		if(offset <html.length()) bHtml.append(html,offset,html.length());
+		
+		// write html file
 		if(!TaskUtils.writeFile(Paths.get(config.output), bHtml.toString().getBytes(), config.compareBytes, maxLastModified)){
-			if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+config.output);			
+			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip identical: "+config.output);			
 		}else {
+			// if html is changed, write timestamp file also
 			TaskUtils.writeFile(Paths.get(config.output+".lastmodified"), Long.toString(maxLastModified).getBytes(), config.compareBytes, maxLastModified);
+			
+			Map<String, Object> pageData = new HashMap<>();
+			pageData.put("scripts", pageScripts);
+			
+			List<List<Object>> cssList = new ArrayList<>();
+			for(ScriptEntry css:cssScripts) {
+				List<Object> entry = new ArrayList<>();
+				entry.add(css.script);
+				entry.add(css.file.lastModified());
+				cssList.add(entry);
+			}
+			pageData.put("css", cssList);
+			
+			pageData.put("lastmodified", maxLastModified);
+			
+			Map globals = new HashMap();
+			if(config.globals != null && !config.globals.isNull()) {
+				Iterator<String> fieldNames = config.globals.fieldNames();
+				while(fieldNames.hasNext()) {
+					String fieldName = fieldNames.next();
+					globals.put(fieldName, config.globals.get(fieldName));
+				}
+			}
+			pageData.put("globals", globals);
+			
+			ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+			try {
+				core.getMapper().writeValue(byteOutput,pageData);
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			TaskUtils.writeFile(Paths.get(config.output+".json"), byteOutput.toByteArray(), config.compareBytes, maxLastModified);
 		}
 	}
 
@@ -248,7 +291,7 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 			}
 			bundle.lastModified = bundle.bundleFile.lastModified();
 		} catch (IOException e){
-			Main.logError("Error reading bundle "+bundle.bundleFile.getAbsolutePath() + " "+e.getMessage(),e);
+			hr.hrg.javawatcher.Main.logError("Error reading bundle "+bundle.bundleFile.getAbsolutePath() + " "+e.getMessage(),e);
 		}
 	}
 
@@ -267,7 +310,7 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 						}
 						
 						for (Path file : htmlFiles) {
-							if(Main.VERBOSE > 1) Main.logInfo("includes changed for: "+file);
+							if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("includes changed for: "+file);
 							genHtml(file);
 						}
 					}						
@@ -287,7 +330,7 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 				HashSet<Path> todo = new HashSet<>(changes);
 				
 				for(Path p:todo) {				
-					if(Main.VERBOSE >1)	Main.logInfo("changed: "+p+" "+p.toFile().lastModified());
+					if(hr.hrg.javawatcher.Main.isInfoEnabled())	hr.hrg.javawatcher.Main.logInfo("changed: "+p+" "+p.toFile().lastModified());
 					genHtml(p);
 				}
 			}

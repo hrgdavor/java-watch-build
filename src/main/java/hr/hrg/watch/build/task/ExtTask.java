@@ -56,7 +56,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			params = new String[]{ "/bin/sh","-c", WatchUtil.join(" ", params)};
 		}
 		try {
-			if(Main.VERBOSE > 1) Main.logInfo("params: " +WatchUtil.join(" ", params));
+			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("params: " +WatchUtil.join(" ", params));
 			proc = Runtime.getRuntime().exec(params);
 			
 			StreamGlobber glob = new StreamGlobber(proc.getErrorStream());
@@ -95,7 +95,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 	private String sendPath(Path path, boolean initial) throws IOException {
 		Path toPath = toFolderPath.resolve(watcher.relativize(path));
 		String str = path.toFile().getAbsolutePath()+"\t"+toPath.toFile().getAbsolutePath()+"\t"+relativeToFolderPath.relativize(path)+"\t"+initial;
-		if(Main.VERBOSE > 1) Main.logInfo("changed: "+str);
+		if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed: "+str);
 		procOut.println(str);
 		procOut.flush();
 		return procIn.readLine();

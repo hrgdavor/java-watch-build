@@ -58,7 +58,7 @@ class GzipTask extends AbstractTask<GzipConfig> implements Runnable {
 					
 					if(path.toFile().isDirectory()) continue;
 					
-					if(Main.VERBOSE > 1) Main.logInfo("changed:"+entry+" "+path.toFile().lastModified());
+					if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed:"+entry+" "+path.toFile().lastModified());
 					
 					compressFile(path, gzPath(path), false);
 				}
@@ -81,15 +81,15 @@ class GzipTask extends AbstractTask<GzipConfig> implements Runnable {
 				Files.copy(from, gzo);
 				gzo.close();
 			} catch (Exception e) {
-				Main.logError("ERROR generating gzip ",e);
+				hr.hrg.javawatcher.Main.logError("ERROR generating gzip ",e);
 			}
 			
-			if((initial && Main.VERBOSE > 1) || (!initial && Main.VERBOSE > 0)) 
-				Main.logInfo("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
+			if((initial && hr.hrg.javawatcher.Main.isInfoEnabled()) || (!initial && hr.hrg.javawatcher.Main.isWarnEnabled())) 
+				hr.hrg.javawatcher.Main.logInfo("gzip:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
 			toFile.setLastModified(fromFile.lastModified());
 			return true;
 		}else{
-			if(Main.VERBOSE > 1) Main.logInfo(" skip already generated: "+to);
+			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo(" skip already generated: "+to);
 			return false;
 		}
 	}

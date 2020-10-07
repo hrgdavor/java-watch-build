@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 import hr.hrg.javawatcher.FileChangeEntry;
@@ -36,7 +37,12 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 		this.watcher.init(watch);
 		Collection<Path> files = watcher.getMatchedFiles();
 		for (Path file : files) {
-			Path toFile = toPath.resolve(watcher.relativize(file));
+			Path relative = watcher.relativize(file);
+			
+			String newName = config.rename.get(relative.toString());
+			if(newName != null) relative = Paths.get(newName);
+			
+			Path toFile = toPath.resolve(relative);
 			copyFile(file, toFile, true);
 		}
 	}
@@ -52,9 +58,15 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 					
 					if(path.toFile().isDirectory()) continue;
 					
-					if(Main.VERBOSE > 1) Main.logInfo("changed:"+entry+" "+path.toFile().lastModified());
+					if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed:"+entry+" "+path.toFile().lastModified());
 					
-					Path toFile = toPath.resolve(watcher.relativize(path));
+					Path relative = watcher.relativize(path);
+					String newName = config.rename.get(relative.toString());
+
+					if(newName != null) relative = Paths.get(newName);
+					
+					Path toFile = toPath.resolve(relative);
+
 					copyFile(path, toFile, false);
 				}
 			}
@@ -86,12 +98,12 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 
 		if(shouldCopy && TaskUtils.writeFile(to, newBytes, config.compareBytes, fromFile.lastModified())){
 			// initially log only iv VERBOSE 2+ ... on change print if VERBOSE 1+
-			if((initial && Main.VERBOSE > 1) || (!initial && Main.VERBOSE > 0)) 
-				Main.logInfo("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
+			if((initial && hr.hrg.javawatcher.Main.isInfoEnabled()) || (!initial && hr.hrg.javawatcher.Main.isWarnEnabled())) 
+				hr.hrg.javawatcher.Main.logInfo("copy:\t  "+from+"\t TO "+to+" "+fromFile.lastModified());
 			return true;
 		}else{
 			if(shouldCopy) {
-				if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+to);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip identical: "+to);
 				if(config.reverseSyncModified && config.compareBytes && fromFile.lastModified() > toFile.lastModified()) {
 					fromFile.setLastModified(toFile.lastModified());
 				}

@@ -93,9 +93,9 @@ static class Task implements Runnable{
 				
 				// clear changed files from cache
 				for (Path changeEntry : changed) {
-					if(Main.VERBOSE > 1){
+					if(hr.hrg.javawatcher.Main.isInfoEnabled()){
 						long newModified = changeEntry.toFile().lastModified();
-						Main.logInfo("changed: "+changeEntry+" "+newModified);
+						hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+newModified);
 						if(newModified > maxLastModified) maxLastModified = newModified;
 					}
 				}
@@ -153,7 +153,7 @@ static class Task implements Runnable{
 
 	private void fillFromBundle(List<JsBundlesTask.PathWithWeight> pathsToBuild, Path bundleFile, int weight) {
 		try {
-			if(Main.VERBOSE  > 1) Main.logInfo("Bundle file "+bundleFile.toFile().getCanonicalPath());
+			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("Bundle file "+bundleFile.toFile().getCanonicalPath());
 			JsonNode bundle = core.getMapper().readTree(bundleFile.toFile());
 			ArrayNode files = (ArrayNode) bundle.get("files");
 			for(JsonNode scriptNode: files) {
@@ -166,7 +166,7 @@ static class Task implements Runnable{
 				}
 			}
 		} catch (Exception e) {
-			Main.logError("Error loading js bundle "+bundleFile.toAbsolutePath(), null);
+			hr.hrg.javawatcher.Main.logError("Error loading js bundle "+bundleFile.toAbsolutePath(), null);
 		}		
 	}
 
@@ -203,14 +203,14 @@ static class Task implements Runnable{
 
 			Path outputPath = rootPath.resolve(output);
 			if(TaskUtils.writeFile(outputPath, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
-				Main.logInfo("Generating "+output);
+				hr.hrg.javawatcher.Main.logInfo("Generating "+output);
 				outputPath.toFile().setLastModified(maxLastModified);
 			}else{
-				if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+output);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip identical: "+output);
 			}
 
 		} catch (Exception e) {
-			Main.logError("unable to write "+output,e);
+			hr.hrg.javawatcher.Main.logError("unable to write "+output,e);
 			if(writer != null) writer.close();
 		}
 	}
@@ -237,12 +237,12 @@ static class Task implements Runnable{
 			writer.close();
 
 			if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
-				Main.logInfo("Generating "+outputText);
+				hr.hrg.javawatcher.Main.logInfo("Generating "+outputText);
 			}else{
-				if(Main.VERBOSE > 1) Main.logInfo("skip identical: "+outputText);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip identical: "+outputText);
 			}
 		} catch (Exception e) {
-			Main.logError("unable to write "+outputText,e);
+			hr.hrg.javawatcher.Main.logError("unable to write "+outputText,e);
 			if(writer != null) writer.close();
 		}
 	}

@@ -43,7 +43,7 @@ public class JsonMapper extends ObjectMapper{
 		try {
 			return writeValueAsString(data);
 		} catch (JsonProcessingException e) {
-			Main.logError(e.getMessage(),e);
+			hr.hrg.javawatcher.Main.logError(e.getMessage(),e);
 			return "";
 		}
 	}

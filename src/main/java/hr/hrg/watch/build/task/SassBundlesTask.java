@@ -46,7 +46,7 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 		for(String inc:config.include){
 			if(inc.indexOf('*') == -1){
 				//exact path, check existence and report error if not present (very useful if it is a typo)
-				if(! new File(root,inc).exists()) Main.logError("SassBundle:"+config.output+" File not found: "+inc, null);
+				if(! new File(root,inc).exists()) hr.hrg.javawatcher.Main.logError("SassBundle:"+config.output+" File not found: "+inc, null);
 			}
 		}
 		
@@ -73,7 +73,7 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 				
 				// clear changed files from cache
 				for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
-					if(Main.VERBOSE >1)	Main.logInfo("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
+					if(hr.hrg.javawatcher.Main.isInfoEnabled())	hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
 				}
 				
 				genBundle();
@@ -135,7 +135,7 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 				}
 			}
 		} catch (Exception e) {
-			Main.logError("Error loading js bundle "+bundleFile.toAbsolutePath(),null);
+			hr.hrg.javawatcher.Main.logError("Error loading js bundle "+bundleFile.toAbsolutePath(),null);
 		}		
 	}
 
@@ -157,12 +157,12 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 			writer.close();
 
 			if(TaskUtils.writeFile(Paths.get(config.output), byteOutput.toByteArray(), config.compareBytes, maxLastModify)){
-				if(Main.VERBOSE >0)	Main.logInfo("Generating "+config.output);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled())	hr.hrg.javawatcher.Main.logInfo("Generating "+config.output);
 			}else{
-				if(Main.VERBOSE >1)	Main.logInfo("skip identical: "+config.output);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled())	hr.hrg.javawatcher.Main.logInfo("skip identical: "+config.output);
 			}
 		} catch (Exception e) {
-			Main.logError("unable to write "+config.output,e);
+			hr.hrg.javawatcher.Main.logError("unable to write "+config.output,e);
 			if(writer != null) writer.close();
 		}
 	}

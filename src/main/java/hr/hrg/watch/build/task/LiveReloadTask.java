@@ -61,7 +61,7 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 				
 				Log.setLog(new org.eclipse.jetty.util.log.Slf4jLog());
 			} catch (Exception e) {
-				Main.logError(e.getMessage(),e);
+				hr.hrg.javawatcher.Main.logError(e.getMessage(),e);
 			}
 			
 			if(config.liveReloadScript != null) {
@@ -127,7 +127,7 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 						}
 					}
 					
-					if(Main.VERBOSE > 1) Main.logInfo("changed:"+path+" "+file.lastModified());
+					if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed:"+path+" "+file.lastModified());
 					
 				}
 			}
@@ -137,7 +137,7 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 			try {
 				server.stop();
 			} catch (Exception e) {
-				Main.logError("problem stopping jetty",e);
+				hr.hrg.javawatcher.Main.logError("problem stopping jetty",e);
 			}
 		}
 		
@@ -203,7 +203,7 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 	    {
 	        super.onWebSocketConnect(sess);
 	        current = this;
-	        Main.logInfo("LiveReload Socket Connected: " + sess);
+	        hr.hrg.javawatcher.Main.logInfo("LiveReload Socket Connected: " + sess);
 	    }
 	    
 	    @Override
@@ -228,10 +228,10 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 
 	    private void sendText(String str) {
 			try {
-				if(Main.VERBOSE >1) Main.logInfo("WS send: "+str);
+				if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("WS send: "+str);
 				getRemote().sendString(str);
 			} catch (IOException e) {
-				Main.logError(e.getMessage(),e);
+				hr.hrg.javawatcher.Main.logError(e.getMessage(),e);
 			}
 		}
 
@@ -267,13 +267,13 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 	    {
 	        super.onWebSocketClose(statusCode,reason);
 	        current = null;
-	        Main.logInfo("Lievereload Socket Closed: [" + statusCode + "] " + reason);
+	        hr.hrg.javawatcher.Main.logInfo("Lievereload Socket Closed: [" + statusCode + "] " + reason);
 	    }
 	    
 	    @Override
 	    public void onWebSocketError(Throwable cause){
 	        super.onWebSocketError(cause);
-	        Main.logError(cause.getMessage(),cause);
+	        hr.hrg.javawatcher.Main.logError(cause.getMessage(),cause);
 	    }
 	}
 

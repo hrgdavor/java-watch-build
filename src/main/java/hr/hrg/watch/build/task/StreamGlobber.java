@@ -23,7 +23,7 @@ class StreamGlobber implements Runnable{
 				while((line = br.readLine()) != null){
 					//b.append(line);
 					if(line.startsWith("INFO "))
-						Main.logInfo(line.substring(5));
+						hr.hrg.javawatcher.Main.logInfo(line.substring(5));
 					else
 						System.err.println(line);
 				}
