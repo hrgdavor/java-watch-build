@@ -27,7 +27,7 @@ import hr.hrg.watch.build.task.SassBundlesTaskFactory.PathWithWeight;
 class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnable{
 
 	private Path rootPath;
-	GlobWatcher watcher;
+	GlobWatcher<Object> watcher;
 
 	SassBundlesTask(SassBundlesConfig config, WatchBuild core){
 		super(config, core);
@@ -40,7 +40,7 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 		}else
 			rootPath = Paths.get(config.root);
 		
-		watcher = new GlobWatcher(rootPath,true);
+		watcher = new GlobWatcher<>(rootPath,true);
 
 		File root = watcher.getRootPath().toFile();
 		for(String inc:config.include){
@@ -65,14 +65,14 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 	public void run() {
 
 		try {
-			Collection<FileChangeEntry<FileMatchGlob>> changed = null;
+			Collection<FileChangeEntry<Object>> changed = null;
 			while(!Thread.interrupted()){
 				
 				changed = watcher.takeBatch(core.getBurstDelay());
 				if(changed == null) break; // interrupted, thread should stop, stop the loop
 				
 				// clear changed files from cache
-				for (FileChangeEntry<FileMatchGlob> changeEntry : changed) {
+				for (FileChangeEntry<Object> changeEntry : changed) {
 					if(hr.hrg.javawatcher.Main.isInfoEnabled())	hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+changeEntry.getPath().toFile().lastModified());
 				}
 				

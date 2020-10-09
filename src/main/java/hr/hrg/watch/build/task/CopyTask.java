@@ -55,7 +55,9 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 				
 				for (FileChangeEntry<FileMatchGlob> entry : changes){
 					Path path = entry.getPath();
-					
+					if(!path.isAbsolute())
+						path = entry.getMatcher().getRootPath().resolve(path);
+
 					if(path.toFile().isDirectory()) continue;
 					
 					if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed:"+entry+" "+path.toFile().lastModified());
@@ -66,7 +68,8 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 					if(newName != null) relative = Paths.get(newName);
 					
 					Path toFile = toPath.resolve(relative);
-
+					System.err.println("Copy from "+path);
+					System.err.println("Copy to   "+toFile);
 					copyFile(path, toFile, false);
 				}
 			}

@@ -43,7 +43,7 @@ static class Task implements Runnable{
 
 	private JsBundlesConfig config;
 	private Path rootPath;
-	GlobWatcher watcher;
+	GlobWatcher<Object> watcher;
 	private long maxLastModified;
 	private BundleEntry bundle;
 	private WatchBuild core;
@@ -58,7 +58,7 @@ static class Task implements Runnable{
 	public void start(boolean watch) {
 		
 		rootPath = Paths.get(config.root);			
-		watcher = new GlobWatcher(rootPath,true);
+		watcher = new GlobWatcher<>(rootPath,true);
 
 		File root = watcher.getRootPath().toFile();
 		

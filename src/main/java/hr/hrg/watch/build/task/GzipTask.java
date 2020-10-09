@@ -55,6 +55,8 @@ class GzipTask extends AbstractTask<GzipConfig> implements Runnable {
 				
 				for (FileChangeEntry<FileMatchGlob> entry : changes){
 					Path path = entry.getPath();
+					if(!path.isAbsolute())
+						path = entry.getMatcher().getRootPath().resolve(path);
 					
 					if(path.toFile().isDirectory()) continue;
 					

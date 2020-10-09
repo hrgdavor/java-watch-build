@@ -37,8 +37,9 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 	
 	public void init(boolean willWatch) {
 		Path inputRoot = core.getBasePath().resolve(config.input);
-		toFolderPath = core.getOutputRoot().resolve(config.output);
+		toFolderPath = core.getOutputRoot().resolve(config.output).toAbsolutePath().normalize();
 		relativeToFolderPath = core.getOutputRoot().resolve(config.srcRoot != null ? config.srcRoot:config.output);
+		relativeToFolderPath = relativeToFolderPath.toAbsolutePath().normalize();
 		
 		watcher = new GlobWatcher(inputRoot, true);
 		File f = inputRoot.toFile();
@@ -75,10 +76,10 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			String line = null;
 			procOut.println(core.getMapper().writeValueAsString(config.options));
 			line = procIn.readLine(); // ignore for now, later could be used as tool options for us to consider
-			
+			System.err.println("INIT");
 			for (Path path : files){
 				if(line == null) break;
-				line = sendPath(path, true);
+				line = sendPath(watcher.getRootPathAbs().relativize(path.toAbsolutePath()), true);
 			}
 			
 			if(!willWatch){
@@ -93,9 +94,24 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 	}
 
 	private String sendPath(Path path, boolean initial) throws IOException {
-		Path toPath = toFolderPath.resolve(watcher.relativize(path));
-		String str = path.toFile().getAbsolutePath()+"\t"+toPath.toFile().getAbsolutePath()+"\t"+relativeToFolderPath.relativize(path)+"\t"+initial;
+		path = watcher.getRootPathAbs().resolve(path).normalize();
+		if(!path.isAbsolute()) path = path.toAbsolutePath().normalize();
+		Path relative = watcher.relativize(path);
+		Path toPath = toFolderPath.resolve(relative).toAbsolutePath().normalize();
+//		System.err.println("root   "+watcher.getRootPathAbs());
+//		System.err.println("to     "+toFolderPath);
+//		System.err.println("relTo  "+relativeToFolderPath);
+//		System.err.println("path   "+path);
+//		System.err.println("toPath "+toPath);
+//		System.err.println("rel    "+relative);
+//		System.err.println("rel2   "+relativeToFolderPath.relativize(path));
+		
+		String str = path.toFile()
+				+"\t"+toPath.toFile()
+				+"\t"+relativeToFolderPath.relativize(path)
+				+"\t"+initial;
 		if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed: "+str);
+//		System.err.println("STR: "+str);
 		procOut.println(str);
 		procOut.flush();
 		return procIn.readLine();
