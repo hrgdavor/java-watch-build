@@ -26,7 +26,7 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 	
 	public void init(boolean watch) {
 		File f = core.getBasePath().resolve(config.input).toFile();
-		if(!f.exists()) throw new RuntimeException("Folder do not exist "+config.input+" "+f.getAbsolutePath());
+		if(!f.exists()) throw new RuntimeException("Folder does not exist "+config.input+" "+f.getAbsolutePath());
 		
 		watcher = new GlobWatcher(f.getAbsoluteFile().toPath());
 		
@@ -36,8 +36,8 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 
 		this.watcher.init(watch);
 		Collection<Path> files = watcher.getMatchedFiles();
-		for (Path file : files) {
-			Path relative = watcher.relativize(file);
+		for (Path relative : files) {
+			Path file = watcher.getRootPathAbs().resolve(relative);
 			
 			String newName = config.rename.get(relative.toString());
 			if(newName != null) relative = Paths.get(newName);
@@ -65,7 +65,9 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 					Path relative = watcher.relativize(path);
 					String newName = config.rename.get(relative.toString());
 
-					if(newName != null) relative = Paths.get(newName);
+					if(newName != null) {
+						relative = Paths.get(newName);
+					}
 					
 					Path toFile = toPath.resolve(relative);
 					System.err.println("Copy from "+path);

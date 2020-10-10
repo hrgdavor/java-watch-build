@@ -39,12 +39,12 @@ class GzipTask extends AbstractTask<GzipConfig> implements Runnable {
 		this.watcher.init(watch);
 		Collection<Path> files = watcher.getMatchedFiles();
 		for (Path path : files) {
-			compressFile(path, gzPath(path), true);
+			compressFile(watcher.getRootPathAbs().resolve(path), gzPath(path), true);
 		}
 	}
 
 	private Path gzPath(Path path) {
-		return toPath.resolve(watcher.relativize(path)).resolveSibling(path.getFileName().toString()+".gz");
+		return toPath.resolve(path).resolveSibling(path.getFileName().toString()+".gz");
 	}
 
 	public void run(){

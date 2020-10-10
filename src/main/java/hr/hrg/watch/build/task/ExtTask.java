@@ -79,7 +79,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			System.err.println("INIT");
 			for (Path path : files){
 				if(line == null) break;
-				line = sendPath(watcher.getRootPathAbs().relativize(path.toAbsolutePath()), true);
+				line = sendPath(path, true);
 			}
 			
 			if(!willWatch){

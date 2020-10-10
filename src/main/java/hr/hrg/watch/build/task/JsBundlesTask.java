@@ -60,7 +60,7 @@ static class Task implements Runnable{
 		rootPath = Paths.get(config.root);			
 		watcher = new GlobWatcher<>(rootPath,true);
 
-		File root = watcher.getRootPath().toFile();
+		File root = watcher.getRootPathAbs().toFile();
 		
 		for(String inc:bundle.include){
 			if(inc.indexOf('*') == -1){
@@ -125,7 +125,7 @@ static class Task implements Runnable{
 					}
 				}
 			}
-			paths.add(new PathWithWeight(path,weight));
+			paths.add(new PathWithWeight(watcher.getRootPathAbs().resolve(path),weight));
 		}
 		
 		Collections.sort(paths);
@@ -143,6 +143,7 @@ static class Task implements Runnable{
 		
 		for(JsBundlesTask.PathWithWeight pw:pathsToBuild){
 			File file = pw.path.toFile();
+			if(!file.exists()) throw new RuntimeException("File not found "+file);
 			if(file.lastModified() > maxLastModified) maxLastModified = file.lastModified();				
 		}
 		
@@ -153,6 +154,7 @@ static class Task implements Runnable{
 
 	private void fillFromBundle(List<JsBundlesTask.PathWithWeight> pathsToBuild, Path bundleFile, int weight) {
 		try {
+			System.err.println("Bundle file "+bundleFile.toFile().getCanonicalPath());
 			if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("Bundle file "+bundleFile.toFile().getCanonicalPath());
 			JsonNode bundle = core.getMapper().readTree(bundleFile.toFile());
 			ArrayNode files = (ArrayNode) bundle.get("files");
@@ -166,7 +168,7 @@ static class Task implements Runnable{
 				}
 			}
 		} catch (Exception e) {
-			hr.hrg.javawatcher.Main.logError("Error loading js bundle "+bundleFile.toAbsolutePath(), null);
+			hr.hrg.javawatcher.Main.logError("Error loading js bundle "+bundleFile.toAbsolutePath()+" "+e.getMessage(), null);
 		}		
 	}
 
@@ -180,7 +182,7 @@ static class Task implements Runnable{
 			writer.write("{\"name\":\""+bundle.name+"\"");
 			writer.write(",\"files\":[");
 			boolean first = true;
-			Path jsPath = watcher.getRootPath();
+			Path jsPath = watcher.getRootPathAbs();
 			long totalSize = 0;
 			for(JsBundlesTask.PathWithWeight pw:paths){
 				if(!first){
@@ -190,6 +192,7 @@ static class Task implements Runnable{
 				writer.write(jsPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
 				writer.write("\"");
 				File file = pw.path.toFile();
+				if(!file.exists()) throw new RuntimeException("File not found "+file);
 				writer.write(",\"modified\":"+file.lastModified());
 				writer.write(",\"size\":"+file.length());
 				writer.write("}");
@@ -230,7 +233,7 @@ static class Task implements Runnable{
 			ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 			writer = new PrintWriter(new OutputStreamWriter(byteOutput));
 
-			Path jsPath = watcher.getRootPath();
+			Path jsPath = watcher.getRootPathAbs();
 			for(JsBundlesTask.PathWithWeight pw:paths){
 				writer.println(jsPath.relativize(pw.path).toString().replace('\\', '/').replaceAll("\"", "\\\""));
 			}

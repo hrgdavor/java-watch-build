@@ -109,7 +109,7 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 
 
 	private void genHtml(Path htmlPath) {
-
+		htmlPath = watcher.getRootPathAbs().resolve(htmlPath);
 		StringBuilder bScript = new StringBuilder();
 		StringBuilder bCss = new StringBuilder();
 		StringBuilder bGlobal = new StringBuilder();
