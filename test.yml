@@ -1,7 +1,19 @@
+#- type: Gzip
+#  input: target/testCopy
+#  output:  target/testCopy
+#  exclude: 
+#    - "**.gz"
+
 - type: Copy
   input: src/test
   output:  target/testCopy
-  include: 
+  include:
     - testScript.yml
-  rename:
-    testScript.yml: test.yml
+
+#- type: Copy
+#  input: src/test
+#  output:  target/testCopy
+#  include: 
+#    - testScript.yml
+#  rename:
+#    testScript.yml: test.yml

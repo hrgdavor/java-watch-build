@@ -7,7 +7,7 @@ import java.util.List;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.CopyConfig;
 
-public class CopyTaskFactory extends AbstractTaskFactory<CopyTask,CopyConfig>{
+public class CopyTaskFactory extends AbstractTaskFactory<CopyTask2,CopyConfig>{
 		
 	public CopyTaskFactory(WatchBuild core){
 		super(core, new CopyConfig());
@@ -20,8 +20,8 @@ public class CopyTaskFactory extends AbstractTaskFactory<CopyTask,CopyConfig>{
 	}
 
 	@Override
-	public CopyTask build() {
-		return new CopyTask(config, core);
+	public CopyTask2 build() {
+		return new CopyTask2(config, core);
 	}
 
 	public CopyTaskFactory compareBytes(boolean val) { config.compareBytes = val; return this; }

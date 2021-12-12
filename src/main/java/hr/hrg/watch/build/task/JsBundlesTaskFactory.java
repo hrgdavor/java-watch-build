@@ -7,7 +7,7 @@ import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.JsBundlesConfig;
 import hr.hrg.watch.build.config.JsBundlesConfig.BundleEntry;
 
-public class JsBundlesTaskFactory extends AbstractTaskFactory<JsBundlesTask, JsBundlesConfig> {
+public class JsBundlesTaskFactory extends AbstractTaskFactory<JsBundlesTask2, JsBundlesConfig> {
 
 
 	public JsBundlesTaskFactory(WatchBuild core){
@@ -20,8 +20,8 @@ public class JsBundlesTaskFactory extends AbstractTaskFactory<JsBundlesTask, JsB
 	}
 
 	@Override
-	public JsBundlesTask build() {
-		return new JsBundlesTask(config, core);
+	public JsBundlesTask2 build() {
+		return new JsBundlesTask2(config, core);
 	}
 
 	public JsBundlesTaskFactory compareBytes(boolean val) { config.compareBytes = val; return this; }

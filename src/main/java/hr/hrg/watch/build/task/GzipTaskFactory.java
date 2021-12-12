@@ -8,7 +8,7 @@ import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.CopyConfig;
 import hr.hrg.watch.build.config.GzipConfig;
 
-public class GzipTaskFactory extends AbstractTaskFactory<GzipTask, GzipConfig>{
+public class GzipTaskFactory extends AbstractTaskFactory<GzipTask2, GzipConfig>{
 
 	
 	public GzipTaskFactory(WatchBuild core){
@@ -22,8 +22,8 @@ public class GzipTaskFactory extends AbstractTaskFactory<GzipTask, GzipConfig>{
 	}
 	
 	@Override
-	public GzipTask build() {
-		return new GzipTask(config, core);
+	public GzipTask2 build() {
+		return new GzipTask2(config, core);
 	}
 
 	public GzipTaskFactory include(String ...arr) { addAll(config.include, arr); return this; }

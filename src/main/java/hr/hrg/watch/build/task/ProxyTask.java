@@ -118,4 +118,9 @@ public class ProxyTask extends AbstractTask<ProxyConfig>{
 
 	}
 
+	@Override
+	public String toString() {
+		return "Proxy:"+config.host+":"+config.port+" from "+config.wwwRoot;
+	}
+	
 }

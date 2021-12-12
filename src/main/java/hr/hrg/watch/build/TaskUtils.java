@@ -79,7 +79,7 @@ public class TaskUtils {
 		}
 		
 		writeFile(to, newBytes);
-		toFile.setLastModified(newLastModified);
+		if(newLastModified != 0) toFile.setLastModified(newLastModified);
 		return true;
 	}
 

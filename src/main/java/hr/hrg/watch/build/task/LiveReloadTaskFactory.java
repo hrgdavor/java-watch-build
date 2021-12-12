@@ -7,7 +7,7 @@ import java.util.List;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.LiveReloadConfig;
 
-public class LiveReloadTaskFactory extends AbstractTaskFactory<LiveReloadTask,LiveReloadConfig>{
+public class LiveReloadTaskFactory extends AbstractTaskFactory<LiveReloadTask2,LiveReloadConfig>{
 		
 	public LiveReloadTaskFactory(WatchBuild core){
 		super(core, new LiveReloadConfig());
@@ -19,8 +19,8 @@ public class LiveReloadTaskFactory extends AbstractTaskFactory<LiveReloadTask,Li
 	}
 
 	@Override
-	public LiveReloadTask build() {
-		return new LiveReloadTask(config, core);
+	public LiveReloadTask2 build() {
+		return new LiveReloadTask2(config, core);
 	}
 	
 	public LiveReloadTaskFactory port(int val) { config.port = val; return this; }

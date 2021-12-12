@@ -44,10 +44,11 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 	}
 	
 	public void init(boolean watch){
+		if(config.input.size() != 1) throw new RuntimeException("Multi input disabled");
+		Path inputPath = root.resolve(config.input.get(0));
+		folderWatcher = new GlobWatcher(inputPath.getParent(), true);
 		
-		folderWatcher = new GlobWatcher(root, true);
-		
-		folderWatcher.includes(config.input);
+		folderWatcher.includes(inputPath.getFileName().toString());
 		
 		for(String output: config.output) {
 			File file = root.resolve(output).toFile();
@@ -59,7 +60,6 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 		for(String input: config.input) {
 			inputs.add(root.resolve(input).toFile());
 		}
-
 		
 		folderWatcher.init(watch);		
 		genFiles();
@@ -182,6 +182,7 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 	private void fromProperties(Map<String, String> newTrans, File from) {
 		Properties prop = new Properties();
 		try {
+			maxLastModified = Math.max(maxLastModified, from.lastModified());
 			prop.load(new FileReader(from));
 			for(String propName: prop.stringPropertyNames()){
 				newTrans.put(propName, prop.getProperty(propName));
@@ -193,6 +194,7 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 
 	private void fromJson(Map<String, String> newTrans, File from) {
 		try {
+			maxLastModified = Math.max(maxLastModified, from.lastModified());
 			JsonNode tree = core.getMapper().readTree(from);
 			
 			Iterator<Entry<String, JsonNode>> fields = tree.fields();
@@ -208,6 +210,7 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 
 	private void fromYaml(Map<String, String> newTrans, File from) {
 		try {
+			maxLastModified = Math.max(maxLastModified, from.lastModified());
 			JsonNode tree = core.getYamlMapper().readTree(from);
 			
 			Iterator<Entry<String, JsonNode>> fields = tree.fields();
