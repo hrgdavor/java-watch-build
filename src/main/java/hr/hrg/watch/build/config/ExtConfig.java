@@ -21,4 +21,5 @@ public class ExtConfig {
 	public ObjectNode options;
 	public String srcRoot;
 	
+	public boolean runOnly;
 }

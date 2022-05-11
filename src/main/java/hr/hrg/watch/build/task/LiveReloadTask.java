@@ -103,6 +103,11 @@ public class LiveReloadTask extends AbstractTask<LiveReloadConfig> implements Ru
 	}
 
 	@Override
+	public boolean needsThread() {
+		return true;
+	}
+
+	@Override
 	public void run() {
 		try {
 			while(!Thread.interrupted()){

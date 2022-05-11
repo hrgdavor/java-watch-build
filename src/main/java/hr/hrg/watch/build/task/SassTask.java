@@ -13,6 +13,10 @@ public class SassTask extends AbstractTask<SassConfig> implements Runnable {
 		super(config, core);
 	}
 
+	@Override
+	public boolean needsThread() {
+		return true;
+	}
 
 	@Override
 	public void run() {

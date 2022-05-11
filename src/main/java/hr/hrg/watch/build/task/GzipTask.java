@@ -47,6 +47,11 @@ class GzipTask extends AbstractTask<GzipConfig> implements Runnable {
 		return toPath.resolve(path).resolveSibling(path.getFileName().toString()+".gz");
 	}
 
+	@Override
+	public boolean needsThread() {
+		return true;
+	}
+	
 	public void run(){
 		try {
 			while(!Thread.interrupted()){

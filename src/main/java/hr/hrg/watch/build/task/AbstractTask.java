@@ -33,10 +33,10 @@ public abstract class AbstractTask<T> extends FileMatchGlob2{
 	}
 
 	public void start(boolean watch) {
-		this.init(watch);
 		if(watch && this instanceof Runnable) 
 			core.addThread(new Thread((Runnable) this, this.toString()));
 	}
 	
 	public abstract void init(boolean watch);
+	public abstract boolean needsThread();
 }

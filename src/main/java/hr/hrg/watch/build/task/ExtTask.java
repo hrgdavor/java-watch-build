@@ -36,19 +36,21 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 	}
 	
 	public void init(boolean willWatch) {
-		Path inputRoot = core.getBasePath().resolve(config.input);
-		toFolderPath = core.getOutputRoot().resolve(config.output).toAbsolutePath().normalize();
-		relativeToFolderPath = core.getOutputRoot().resolve(config.srcRoot != null ? config.srcRoot:config.output);
-		relativeToFolderPath = relativeToFolderPath.toAbsolutePath().normalize();
-		
-		watcher = new GlobWatcher(inputRoot, true);
-		File f = inputRoot.toFile();
-		if(!f.exists()) throw new RuntimeException("Input folder does not exist "+inputRoot+" : "+f.getAbsolutePath());
-		
-		watcher.includes(config.include);
-		watcher.excludes(config.exclude);
+		if(!config.runOnly) {
+			Path inputRoot = core.getBasePath().resolve(config.input);
+			toFolderPath = core.getOutputRoot().resolve(config.output).toAbsolutePath().normalize();
+			relativeToFolderPath = core.getOutputRoot().resolve(config.srcRoot != null ? config.srcRoot:config.output);
+			relativeToFolderPath = relativeToFolderPath.toAbsolutePath().normalize();
+			
+			watcher = new GlobWatcher(inputRoot, true);
+			File f = inputRoot.toFile();
+			if(!f.exists()) throw new RuntimeException("Input folder does not exist "+inputRoot+" : "+f.getAbsolutePath());
+			
+			watcher.includes(config.include);
+			watcher.excludes(config.exclude);
+			watcher.init(willWatch);
+		}
 
-		watcher.init(willWatch);
 
 		String[] params = new String[config.params.length+1];
 		System.arraycopy(config.params, 0, params, 1, config.params.length);
@@ -73,17 +75,40 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			
 			Collection<Path> files = watcher.getMatchedFiles(); 
 
-			String line = null;
-			procOut.println(core.getMapper().writeValueAsString(config.options));
-			line = procIn.readLine(); // ignore for now, later could be used as tool options for us to consider
-			System.err.println("INIT");
-			for (Path path : files){
-				if(line == null) break;
-				line = sendPath(path, true);
+			if(config.runOnly) {
+				if(willWatch) {					
+					new Thread(new Runnable() {
+						public void run() {
+							String line = null;
+							try {
+								while((line = procIn.readLine())!= null) {
+									hr.hrg.javawatcher.Main.logInfo(line);
+								}
+							} catch (IOException e) {
+								hr.hrg.javawatcher.Main.logError("error runnig task "+this, e);
+							}
+							
+						}
+					}).start();
+				}else {
+					String line = null;
+					while((line = procIn.readLine())!= null) {
+						hr.hrg.javawatcher.Main.logInfo(line);
+					}					
+				}
+			} else {
+				String line = null;
+				procOut.println(core.getMapper().writeValueAsString(config.options));
+				line = procIn.readLine(); // ignore for now, later could be used as tool options for us to consider
+				System.err.println("INIT "+this);
+				for (Path path : files){
+					if(line == null) break;
+					line = sendPath(path, true);
+				}
 			}
 			
 			if(!willWatch){
-				closeProc();
+				closeProc(true);
 				watcher.close();
 			}
 
@@ -93,6 +118,11 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 		
 	}
 
+	@Override
+	public boolean needsThread() {
+		return !config.runOnly;
+	}
+	
 	private String sendPath(Path path, boolean initial) throws IOException {
 		path = watcher.getRootPathAbs().resolve(path).normalize();
 		if(!path.isAbsolute()) path = path.toAbsolutePath().normalize();
@@ -117,12 +147,13 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 		return procIn.readLine();
 	}
 
-	private void closeProc() {
+	private void closeProc(boolean wait) {
 		try {
-			if(proc != null) {					
-				proc.destroy();
+			if(proc != null) {	
 				proc.getInputStream().close();
 				proc.getOutputStream().close();
+				if(wait) proc.waitFor();
+				proc.destroy();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -144,7 +175,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			e.printStackTrace();
 		}finally {
 			watcher.close();
-			closeProc();
+			closeProc(false);
 		}
 	}
 	

@@ -46,6 +46,10 @@ public class CopyTask2 extends AbstractTask<CopyConfig>{
 	}
 	
 	@Override
+	public boolean needsThread() {
+		return false;
+	}
+	@Override
 	public void fileEvent(FileDef def, boolean initial){
 		Path path = def.path;
 		if(isSingleFile) {

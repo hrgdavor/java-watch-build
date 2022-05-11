@@ -34,6 +34,11 @@ public class ProxyTask extends AbstractTask<ProxyConfig>{
 	public static final String REGISTRY_CONTEXT_NAME = "hr.apache.tapestry5.application-registry";
 	
 	@Override
+	public boolean needsThread() {
+		return false;
+	}
+
+	@Override
 	public void init(boolean watch) {
 		if(!watch) return;
 		

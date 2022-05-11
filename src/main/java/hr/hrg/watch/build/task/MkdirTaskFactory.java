@@ -54,6 +54,12 @@ public class MkdirTaskFactory extends AbstractTaskFactory<MkdirTaskFactory.Task,
 		public String toString() {
 			return "Mkdir:"+dirStr;
 		}
+
+		@Override
+		public boolean needsThread() {
+			return false;
+		}
+
 	}
 
 }

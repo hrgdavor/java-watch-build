@@ -46,6 +46,11 @@ class CopyTask extends AbstractTask<CopyConfig> implements Runnable {
 			copyFile(file, toFile, true);
 		}
 	}
+	
+	@Override
+	public boolean needsThread() {
+		return true;
+	}
 
 	public void run(){
 		try {

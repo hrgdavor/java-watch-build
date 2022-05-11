@@ -65,6 +65,10 @@ public class TaskUtils {
 	}
 	
 	public static final boolean writeFile(Path to, byte[] newBytes, boolean compareBytes, long newLastModified){
+		return writeFile(to, newBytes, compareBytes, newLastModified, true);
+	}
+	
+	public static final boolean writeFile(Path to, byte[] newBytes, boolean compareBytes, long newLastModified, boolean checkTs){
 
 		File toFile = to.toFile();
 

@@ -43,6 +43,11 @@ public class GzipTask2 extends AbstractTask<GzipConfig>{
 		
 		core.addWatcherTask(this);
 	}
+
+	@Override
+	public boolean needsThread() {
+		return false;
+	}
 	
 	@Override
 	public void fileEvent(FileDef def, boolean initial){

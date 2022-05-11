@@ -296,6 +296,11 @@ class HtmlScriptAndCssTask extends AbstractTask<HtmlScriptAndCssConfig> implemen
 	}
 
 	@Override
+	public boolean needsThread() {
+		return true;
+	}
+
+	@Override
 	public void run() {
 		
 		Thread includesThread = new Thread(new Runnable() {

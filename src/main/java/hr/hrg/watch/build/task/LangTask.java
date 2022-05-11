@@ -26,7 +26,7 @@ import hr.hrg.watch.build.config.LangConfig;
 public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 
 
-	protected GlobWatcher folderWatcher;
+	protected List<GlobWatcher> folderWatchers = new ArrayList<>();
 	
 	public static final int BUFFER_SIZE = 4096;
 	private Path root;
@@ -44,44 +44,57 @@ public class LangTask extends AbstractTask<LangConfig> implements Runnable{
 	}
 	
 	public void init(boolean watch){
-		if(config.input.size() != 1) throw new RuntimeException("Multi input disabled");
-		Path inputPath = root.resolve(config.input.get(0));
-		folderWatcher = new GlobWatcher(inputPath.getParent(), true);
-		
-		folderWatcher.includes(inputPath.getFileName().toString());
-		
-		for(String output: config.output) {
-			File file = root.resolve(output).toFile();
-			if(file.exists()){
-				maxLastModified = Math.max(file.lastModified(), maxLastModified);
+		for(String inputName:config.input) {			
+			Path inputPath = root.resolve(inputName);
+			GlobWatcher folderWatcher = new GlobWatcher(inputPath.getParent(), true);
+			
+			folderWatcher.includes(inputPath.getFileName().toString());
+			
+			for(String output: config.output) {
+				File file = root.resolve(output).toFile();
+				if(file.exists()){
+					maxLastModified = Math.max(file.lastModified(), maxLastModified);
+				}
 			}
+			
+			for(String input: config.input) {
+				inputs.add(root.resolve(input).toFile());
+			}
+			
+			folderWatcher.init(watch);
+			folderWatchers.add(folderWatcher);
 		}
-		
-		for(String input: config.input) {
-			inputs.add(root.resolve(input).toFile());
-		}
-		
-		folderWatcher.init(watch);		
 		genFiles();
+	}
+
+	@Override
+	public boolean needsThread() {
+		return true;
 	}
 
 	public void run(){
 		try {			
 			while(!Thread.interrupted()){
-				Collection<Path> changes = folderWatcher.takeBatchFilesUnique(core.getBurstDelay());
-				if(changes == null) break; // null means interrupted, and we should end this loop
-				
-				for (Path changeEntry : changes) {
-					File file = changeEntry.toFile();
-					if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+file.lastModified());
-					cache.remove(file.getAbsolutePath());
-					long mod = file.lastModified();
-					if(mod > maxLastModified) maxLastModified = mod;	
+				boolean changed = false;
+				for(GlobWatcher folderWatcher: folderWatchers) {	
+					Collection<Path> changes = folderWatcher.takeBatchFilesUnique(core.getBurstDelay());
+					if(changes == null) break; // null means interrupted, and we should end this loop
+					
+					for (Path changeEntry : changes) {
+						File file = changeEntry.toFile();
+						if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+file.lastModified());
+						cache.remove(file.getAbsolutePath());
+						long mod = file.lastModified();
+						if(mod > maxLastModified) maxLastModified = mod;	
+					}
+					changed = true;
 				}
-				genFiles();
+				if(changed) genFiles();
 			}
 		} finally {
-			folderWatcher.close();
+			for(GlobWatcher folderWatcher: folderWatchers) {				
+				folderWatcher.close();
+			}
 		}
 	}
 

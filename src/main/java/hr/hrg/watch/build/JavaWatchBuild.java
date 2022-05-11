@@ -69,7 +69,7 @@ public class JavaWatchBuild {
 		return add(new ExtTaskFactory(core, cmd, params)); 
 	}
 
-	public LangTaskFactory doLang(String input) {
+	public LangTaskFactory doLang(String ...input) {
 		return add(new LangTaskFactory(core, input));
 	}
 

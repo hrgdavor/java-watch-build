@@ -62,6 +62,11 @@ class SassBundlesTask extends AbstractTask<SassBundlesConfig> implements Runnabl
 
 	
 	@Override
+	public boolean needsThread() {
+		return true;
+	}
+
+	@Override
 	public void run() {
 
 		try {

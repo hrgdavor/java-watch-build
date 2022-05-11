@@ -38,6 +38,11 @@ class JsBundlesTask extends AbstractTask<JsBundlesConfig>{
 		}			
 	}
 
+	@Override
+	public boolean needsThread() {
+		return false;
+	}
+	
 
 static class Task implements Runnable{
 
@@ -79,7 +84,6 @@ static class Task implements Runnable{
 		
 		genBundle();
 	}
-
 	
 	@Override
 	public void run() {

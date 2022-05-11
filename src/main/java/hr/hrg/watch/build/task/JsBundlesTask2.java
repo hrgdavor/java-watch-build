@@ -42,9 +42,11 @@ class JsBundlesTask2 extends AbstractTask<JsBundlesConfig>{
 		return "JsBundlesTask:"+config.root;
 	}
 	
-
-
-static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
+	@Override
+	public boolean needsThread() {
+		return false;
+	}
+	static class Task extends AbstractTask<JsBundlesConfig>{
 
 	private long maxLastModified;
 	private BundleEntry bundle;
@@ -70,62 +72,15 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 	}
 
 	@Override
-	public void init(boolean watch) {
-		genBundle();
+	public boolean needsThread() {
+		return false;
 	}
 
-	public void start(boolean watch) {
-		
-//		rootPath = Paths.get(config.root);			
-//		watcher = new GlobWatcher<>(rootPath,true);
-//
-//		File root = watcher.getRootPathAbs().toFile();
-//		
-//		for(String inc:bundle.include){
-//			if(inc.indexOf('*') == -1){
-//				//exact path, check existence and report error if not present (very useful if it is a typo)
-//				File file =  new File(root,inc);
-//				if(! file.exists()) core.logError("Bundle:"+bundle.name+" File not found: "+inc+" "+file.getAbsolutePath());
-//			}
-//		}
-//		
-//		watcher.includes(bundle.include);
-//		watcher.excludes(bundle.exclude);
-//		
-//		// when input watcher is started, all matchers that were added to it are 
-//		// filled with files found that are (included + not excluded)
-//		watcher.init(watch);
-//		
-//		genBundle();
-	}
-
-	
 	@Override
-	public void run() {
-
-//		try {
-//			Collection<Path> changed = null;
-//			while(!Thread.interrupted()){
-//				
-//				changed = watcher.takeBatchFilesUnique(core.getBurstDelay());
-//				if(changed == null) break; // interrupted, thread should stop, stop the loop
-//				
-//				// clear changed files from cache
-//				for (Path changeEntry : changed) {
-//					if(hr.hrg.javawatcher.Main.isInfoEnabled()){
-//						long newModified = changeEntry.toFile().lastModified();
-//						hr.hrg.javawatcher.Main.logInfo("changed: "+changeEntry+" "+newModified);
-//						if(newModified > maxLastModified) maxLastModified = newModified;
-//					}
-//				}
-//				
-//				genBundle();
-//			}				
-//		} finally {
-//			watcher.close();
-//		}
+	public void init(boolean watch) {
+		genBundle(true);
 	}
-	
+
 	@Override
 	protected void matched(FileDef def, Path relative, boolean initial) {
 //		super.matched(eventType, path, relative, initial);
@@ -133,10 +88,10 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 		long newModified = def.lastModified;
 		hr.hrg.javawatcher.Main.logInfo("changed: "+def.path+" "+newModified);
 		if(newModified > maxLastModified) maxLastModified = newModified;
-		genBundle();
+		genBundle(false);
 	}
 	
-	private void genBundle() {
+	private void genBundle(boolean init) {
 		
 		List<JsBundlesTask2.PathWithWeight> paths = new ArrayList<>();
 		
@@ -177,8 +132,8 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 			if(file.lastModified() > maxLastModified) maxLastModified = file.lastModified();				
 		}
 		
-		writeText(pathsToBuild);
-		writeJson(pathsToBuild);
+		writeText(pathsToBuild, init);
+		writeJson(pathsToBuild, init);
 
 	}
 
@@ -202,7 +157,7 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 		}		
 	}
 
-	private void writeJson(List<JsBundlesTask2.PathWithWeight> paths) {
+	private void writeJson(List<JsBundlesTask2.PathWithWeight> paths, boolean init) {
 		String output = buildFileName("json");
 		PrintWriter writer = null;
 		try {			
@@ -235,7 +190,7 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 			writer.close();
 
 			Path outputPath = rootPath.resolve(output);
-			if(TaskUtils.writeFile(outputPath, byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
+			if(TaskUtils.writeFile(outputPath, byteOutput.toByteArray(), config.compareBytes, maxLastModified, !init)){
 				hr.hrg.javawatcher.Main.logInfo("Generating "+output);
 				outputPath.toFile().setLastModified(maxLastModified);
 			}else{
@@ -254,7 +209,7 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 		return sb.toString();
 	}
 	
-	private void writeText(List<JsBundlesTask2.PathWithWeight> paths) {
+	private void writeText(List<JsBundlesTask2.PathWithWeight> paths, boolean init) {
 		if(!config.outputText) return;
 		String outputText = buildFileName("txt");
 		
@@ -269,7 +224,7 @@ static class Task extends AbstractTask<JsBundlesConfig> implements Runnable{
 			}
 			writer.close();
 
-			if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), config.compareBytes, maxLastModified)){
+			if(TaskUtils.writeFile(rootPath.resolve(outputText), byteOutput.toByteArray(), config.compareBytes, maxLastModified, !init)){
 				hr.hrg.javawatcher.Main.logInfo("Generating "+outputText);
 			}else{
 				if(hr.hrg.javawatcher.Main.isInfoEnabled()) hr.hrg.javawatcher.Main.logInfo("skip identical: "+outputText);
@@ -299,6 +254,11 @@ static class PathWithWeight implements Comparable<JsBundlesTask2.PathWithWeight>
 	@Override
 	public int compareTo(JsBundlesTask2.PathWithWeight o) {
 		return weight - o.weight;
+	}
+	
+	@Override
+	public String toString() {
+		return "["+weight+"]"+path;
 	}
 }
 }

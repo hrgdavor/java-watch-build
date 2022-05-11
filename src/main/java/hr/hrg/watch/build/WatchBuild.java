@@ -142,7 +142,7 @@ public class WatchBuild {
 				confFile = args[i];
 		}
 		
-		List<AbstractTask<?>> tasks = new ArrayList<>();
+		tasks = new ArrayList<>();
 		
 		try {
 			InputStream inputStream = confFile == null ? System.in : new FileInputStream(confFile);
@@ -169,7 +169,7 @@ public class WatchBuild {
 					if(factory == null) throw new RuntimeException("Factory not found for: "+type);
 					
 					AbstractTask<?> task = factory.task(conf);
-					tasks.add(task);
+					if(!tasks.contains(task)) tasks.add(task);
 //					logMessage("Created task "+task);
 				} catch (Exception e) {
 					throw new RuntimeException("problem with item#"+i+": "+conf, e);
@@ -185,6 +185,11 @@ public class WatchBuild {
 			System.out.println();
 			System.out.println();
 
+			if(!watch) {
+				System.exit(errors.size() == 0 ? 0 : 1);
+				return;
+			}
+			
 			if(!watch || confFile == null) return;
 						
 			System.out.println();
@@ -260,34 +265,34 @@ public class WatchBuild {
 			paths.addAll(watchPaths);
 			Collections.sort(paths);
 			for(Path path:paths) System.out.println(path);
-			directoryWatcher = builder.paths(paths).listener(listener).build();
+			if(watch) directoryWatcher = builder.paths(paths).listener(listener).build();
 			logMessageTime("Init DirectoryWatcher with "+paths.size()+" paths");
 			
 			HashSet<Path> done = new HashSet<>();
 			for(Path path:paths) initWatchers2(path, path.toFile(), new ArrayList<>(), true, done);
 			logMessageTime("Init watchers file lists");
-			
+						
+			if(watch) {				
+				threads.add(new Thread(new Runnable() {
+					public void run() {					
+						directoryWatcher.watch();
+					}
+				},"Main Watcher thread"));
 
-			for(FileMatchGlob2 watcher:watchersList) {
-				watcher.init(watch);
-				logMessageTime("Init watcher "+watcher);
+				threads.add(new Thread(new Worker(),"Watch files worker"));
 			}
-			logMessage("Init watchers DONE");
-			
-			threads.add(new Thread(new Runnable() {
-				public void run() {					
-					directoryWatcher.watch();
-				}
-			},"Main Watcher thread"));
 
-			
-			threads.add(new Thread(new Worker(),"Watch files worker"));
-
-			
 			logMessage("start tasks");
 			for(AbstractTask<?> task:tasks) {
-				task.start(watch);
+				Path path = task.getRootPath();
+				if(path == null) {
+					System.err.println("null root for "+task.id+" " +task);
+				}else {					
+					initRecursive(task, path, path.toFile());
+				}
 				logMessageTime("start task "+task.id+" " +task);				
+				task.init(watch);
+				task.start(watch);
 			}
 			
 			if(threads.size() >0) logMessage("Starting "+threads.size()+" watch threads");
@@ -477,6 +482,25 @@ public class WatchBuild {
 			}
 		}
 	}
+
+	public void initRecursive(FileMatchGlob2 watcher, Path folderPath, File folder){
+		File[] files = folder.listFiles();
+		
+		for(File f:files) {
+			Path childPath = f.toPath();
+			if(f.isDirectory()) {
+				initRecursive(watcher,childPath, f);
+			}else {
+				FileDef def = fileCache.get(childPath);
+				if(def == null) {
+					def = new FileDef(childPath, EventType.CREATE);
+				}else {
+					def.update(EventType.CREATE);
+				}
+				watcher.fileEvent(def, true);
+			}
+		}
+	}
 	
 	class BuildDirectoryChangeListener implements DirectoryChangeListener{
 		@Override
@@ -496,6 +520,7 @@ public class WatchBuild {
 		}
 	}
 	BuildDirectoryChangeListener listener = new BuildDirectoryChangeListener();
+	private List<AbstractTask<?>> tasks = new ArrayList<>();
 
 	public void logSkipIdentical(int taskId, Path to) {
 		hr.hrg.javawatcher.Main.logSkipIdentical(taskId, to);
@@ -546,7 +571,7 @@ public class WatchBuild {
 			watchersList = new ArrayList<>();
 			fileCache = new HashMap<>();
 			watchersParents = new HashSet<>();
-			directoryWatcher.close();
+			if(directoryWatcher != null) directoryWatcher.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}		
@@ -558,6 +583,7 @@ public class WatchBuild {
 		if(rootPath == null) {
 			throw new NullPointerException("rootPath");
 		}
+		if(!tasks.contains(task)) tasks.add(task);
 		watchPaths.add(rootPath);
 		watchersList.add(task);
 		Path pathKey = rootPath;

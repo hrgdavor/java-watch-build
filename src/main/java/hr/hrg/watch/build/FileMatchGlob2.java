@@ -215,18 +215,7 @@ public class FileMatchGlob2{
 	public boolean isRecursive() {
 		return recursive;
 	}
-	
-	/** {@inheritDoc} */
-	public boolean offer(Path file) {
-        if (isMatch(file)) {
-            if(collectMatched) matched.add(file);
-            return true;
-        } else{
-        	if(collectExcluded) excluded.add(file);
-        	return false;
-        }
-	}
-			
+				
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {

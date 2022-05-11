@@ -58,6 +58,11 @@ public class LiveReloadTask2 extends AbstractTask<LiveReloadConfig>{
 	}
 
 	@Override
+	public boolean needsThread() {
+		return false;
+	}
+
+	@Override
 	public void start(boolean watch) {
 //		super.start(watch);
 	}
