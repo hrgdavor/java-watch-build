@@ -176,7 +176,7 @@ public class WatchBuild {
 				}
 			}
 				
-			runBuild(tasks, watch);
+			runBuild(watch);
 
 			System.out.println();
 			System.out.println();
@@ -255,7 +255,7 @@ public class WatchBuild {
 		included.clear();
 	}
 	
-	public void runBuild(List<AbstractTask<?>> tasks, boolean watch) {
+	public void runBuild(boolean watch) {
 		
 		logMessage("Run build");
 		errors.clear();
@@ -520,7 +520,7 @@ public class WatchBuild {
 		}
 	}
 	BuildDirectoryChangeListener listener = new BuildDirectoryChangeListener();
-	private List<AbstractTask<?>> tasks = new ArrayList<>();
+	List<AbstractTask<?>> tasks = new ArrayList<>();
 
 	public void logSkipIdentical(int taskId, Path to) {
 		hr.hrg.javawatcher.Main.logSkipIdentical(taskId, to);
@@ -583,7 +583,12 @@ public class WatchBuild {
 		if(rootPath == null) {
 			throw new NullPointerException("rootPath");
 		}
-		if(!tasks.contains(task)) tasks.add(task);
+
+		if(!tasks.contains(task)) {
+			tasks.add(task);
+		}else {
+			System.err.println("skipping add of existing task "+task);
+		}
 		watchPaths.add(rootPath);
 		watchersList.add(task);
 		Path pathKey = rootPath;

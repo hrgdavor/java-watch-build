@@ -34,14 +34,12 @@ public class JavaWatchBuild {
 	}
 	
 	public void start(boolean watch) {
-		
-		List<AbstractTask<?>> tasks = new ArrayList<>();
-		
+				
 		for(AbstractTaskFactory<?, ?> factory:factories) {
-			tasks.add(factory.build());
+			core.tasks.add(factory.build());
 		}
 
-		core.runBuild(tasks, watch);
+		core.runBuild(watch);
 	}
 
 	private <T extends AbstractTaskFactory<?, ?>> T add(T factory) {
