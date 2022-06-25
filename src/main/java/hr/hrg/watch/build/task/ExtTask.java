@@ -120,7 +120,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			
 			if(!willWatch){
 				closeProc(true);
-				watcher.close();
+				if(watcher != null) watcher.close();
 			}
 
 		} catch (Exception e) {
