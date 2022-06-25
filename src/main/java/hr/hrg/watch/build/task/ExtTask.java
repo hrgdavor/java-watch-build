@@ -51,9 +51,9 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			watcher.init(willWatch);
 		}
 
-
-		String[] params = new String[config.params.length+1];
-		System.arraycopy(config.params, 0, params, 1, config.params.length);
+		String[] arr = willWatch && config.watchParams.length > 0 ? config.watchParams : config.params; 
+		String[] params = new String[arr.length+1];
+		System.arraycopy(config.params, 0, params, 1, arr.length);
 		params[0] = config.cmd;
 		if(WatchUtil.isLinux()){
 			params = new String[]{ "/bin/sh","-c", WatchUtil.join(" ", params)};

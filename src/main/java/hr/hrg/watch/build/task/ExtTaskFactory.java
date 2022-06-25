@@ -35,6 +35,7 @@ public class ExtTaskFactory extends AbstractTaskFactory<ExtTask, ExtConfig> {
 	
 	public ExtTaskFactory srcRoot(String srcRoot) { config.srcRoot = srcRoot; return this; }
 
+	public ExtTaskFactory watchParams(String ...arr) {config.watchParams = arr == null ? new String[0] : arr; return this; }
 	public ExtTaskFactory include(String ...arr) { addAll(config.include, arr); return this; }
 	public ExtTaskFactory exclude(String ...arr) { addAll(config.exclude, arr); return this; }
 	public ExtTaskFactory include(List<String> list) { config.include.addAll(list); return this; }
