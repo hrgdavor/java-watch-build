@@ -12,6 +12,7 @@ public class ExtConfig {
 	public String cmd;
 	public String[] params = {};
 	public String[] watchParams = {};
+	public String watchOption = null;
 	
 	public String input = "./";
 	public String output = "./";

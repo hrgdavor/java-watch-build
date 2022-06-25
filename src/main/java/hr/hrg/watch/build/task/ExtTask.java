@@ -13,7 +13,6 @@ import java.util.Collection;
 
 import hr.hrg.javawatcher.GlobWatcher;
 import hr.hrg.javawatcher.WatchUtil;
-import hr.hrg.watch.build.Main;
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.ExtConfig;
 
@@ -51,7 +50,16 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			watcher.init(willWatch);
 		}
 
-		String[] arr = willWatch && config.watchParams.length > 0 ? config.watchParams : config.params; 
+		String[] arr = config.params;
+		if(willWatch) {
+			if(config.watchParams.length > 0) {
+				arr = config.watchParams; 
+			}else if(config.watchOption != null && !config.watchOption.isEmpty()){
+				arr = new String[arr.length+1];
+				System.arraycopy(config.params, 0, arr, 0, config.params.length-1);
+				arr[arr.length-1] = config.watchOption;
+			}
+		}
 		String[] params = new String[arr.length+1];
 		System.arraycopy(config.params, 0, params, 1, arr.length);
 		params[0] = config.cmd;
