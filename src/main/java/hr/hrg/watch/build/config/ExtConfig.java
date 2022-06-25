@@ -10,6 +10,7 @@ public class ExtConfig {
 	public String type="Ext";
 
 	public String cmd;
+	public String winCmd;
 	public String[] params = {};
 	public String[] watchParams = {};
 	public String watchOption = null;

@@ -41,6 +41,7 @@ public class ExtTaskFactory extends AbstractTaskFactory<ExtTask, ExtConfig> {
 	public ExtTaskFactory include(List<String> list) { config.include.addAll(list); return this; }
 	public ExtTaskFactory exclude(List<String> list) { config.exclude.addAll(list); return this; }
 	public ExtTaskFactory runOnly(boolean v) { config.runOnly = v; return this; }
+	public ExtTaskFactory winCmd(String v) { config.winCmd = v; return this; }
 
 	public ExtTaskFactory optionsPojo(Object options) { config.options = core.getMapper().convertValue(options, ObjectNode.class); return this; }
 	public ExtTaskFactory options(Object ...options) { config.options = toObjectNode(config.options, core.getMapper(), options); return this; }

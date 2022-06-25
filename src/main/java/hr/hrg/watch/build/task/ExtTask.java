@@ -61,8 +61,11 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			}
 		}
 		String[] params = new String[arr.length+1];
-		System.arraycopy(config.params, 0, params, 1, arr.length);
+		System.arraycopy(arr, 0, params, 1, arr.length);
 		params[0] = config.cmd;
+		if(System.getProperty("os.name").toLowerCase().contains("win") && config.winCmd != null && !config.winCmd.isEmpty()) {
+			params[0] = config.winCmd;
+		}
 		if(WatchUtil.isLinux()){
 			params = new String[]{ "/bin/sh","-c", WatchUtil.join(" ", params)};
 		}
@@ -81,7 +84,6 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 			InputStreamReader inr = new InputStreamReader(in);
 			procIn = new BufferedReader(inr);
 			
-			Collection<Path> files = watcher.getMatchedFiles(); 
 
 			if(config.runOnly) {
 				if(willWatch) {					
@@ -105,6 +107,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 					}					
 				}
 			} else {
+				Collection<Path> files = watcher.getMatchedFiles(); 
 				String line = null;
 				procOut.println(core.getMapper().writeValueAsString(config.options));
 				line = procIn.readLine(); // ignore for now, later could be used as tool options for us to consider
@@ -170,6 +173,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 
 	@Override
 	public void run() {
+		if(config.runOnly) return;
 		try {
 			while(!Thread.interrupted()){
 				Collection<Path> files = watcher.takeBatchFilesUnique(burstDelay);
@@ -182,7 +186,7 @@ public class ExtTask extends AbstractTask<ExtConfig> implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}finally {
-			watcher.close();
+			if(watcher != null) watcher.close();
 			closeProc(false);
 		}
 	}
