@@ -257,7 +257,7 @@ public class WatchBuild {
 	
 	public void runBuild(boolean watch) {
 		
-		logMessage("Run build");
+		logMessage("Run build, watch: "+watch);
 		errors.clear();
 		
 		try {
@@ -547,7 +547,7 @@ public class WatchBuild {
 		}else {
 			if(outputEntry.getTask() != task) {
 				// TODO notify conflict
-				throw new RuntimeException("Multiple tasks generating same file. Task: "+outputEntry.getTask().getId()+" and Task: "+task.getId());
+				throw new RuntimeException("Multiple tasks generating same file. Task: "+outputEntry.getTask().getId()+" and Task: "+task.getId()+"\n"+from.toAbsolutePath()+"\n"+to.toAbsolutePath());
 			}
 			if(outputEntry.getDescr() != descr) {
 				// TODO notify conflict				
@@ -579,10 +579,10 @@ public class WatchBuild {
 	
 	public <T> void addWatcherTask(AbstractTask<T> task){
 		Path rootPath = task.getRootPath();
-		if(!rootPath.toFile().isDirectory()) throw new RuntimeException("Not a directory "+rootPath);
 		if(rootPath == null) {
 			throw new NullPointerException("rootPath");
 		}
+		if(!rootPath.toFile().isDirectory()) throw new RuntimeException("Not a directory "+rootPath);
 
 		if(!tasks.contains(task)) {
 			tasks.add(task);

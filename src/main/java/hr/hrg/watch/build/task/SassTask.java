@@ -1,5 +1,7 @@
 package hr.hrg.watch.build.task;
 
+import java.nio.file.Path;
+
 import hr.hrg.watch.build.WatchBuild;
 import hr.hrg.watch.build.config.SassConfig;
 import hr.hrg.watchsass.Compiler;
@@ -45,6 +47,11 @@ public class SassTask extends AbstractTask<SassConfig> implements Runnable {
 
 		compiler.init(watch);
 		compiler.compile();
+	}
+	
+	@Override
+	public Path getRootPath() {
+		return super.getRootPath();
 	}
 
 	@Override
